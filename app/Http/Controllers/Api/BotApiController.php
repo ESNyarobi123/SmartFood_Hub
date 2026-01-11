@@ -46,14 +46,10 @@ class BotApiController extends Controller
             DB::beginTransaction();
 
             $user = User::findOrFail($validated['user_id']);
-            $order = new Order;
-            $order->user_id = $user->id;
-            $order->order_number = Order::generateOrderNumber();
-            $order->delivery_address = $validated['location'];
-            $order->notes = $validated['custom_notes'] ?? null;
-            $order->status = 'pending';
-            $order->source = 'whatsapp';
+
+            // Calculate total amount first
             $totalAmount = 0;
+            $itemsData = [];
 
             foreach ($validated['items'] as $item) {
                 if ($item['type'] === 'food') {
@@ -65,17 +61,38 @@ class BotApiController extends Controller
                 $itemTotal = $product->price * $item['qty'];
                 $totalAmount += $itemTotal;
 
-                $orderItem = new OrderItem;
-                $orderItem->orderable_type = $item['type'] === 'food' ? FoodItem::class : KitchenProduct::class;
-                $orderItem->orderable_id = $item['id'];
-                $orderItem->quantity = $item['qty'];
-                $orderItem->price = $product->price;
-                $orderItem->notes = $item['notes'] ?? null;
-                $order->orderItems()->save($orderItem);
+                // Store item data for later
+                $itemsData[] = [
+                    'orderable_type' => $item['type'] === 'food' ? FoodItem::class : KitchenProduct::class,
+                    'orderable_id' => $item['id'],
+                    'quantity' => $item['qty'],
+                    'price' => $product->price,
+                    'notes' => $item['notes'] ?? null,
+                ];
             }
 
-            $order->total_amount = $totalAmount;
-            $order->save();
+            // Create and save the order first (so it gets an ID)
+            $order = Order::create([
+                'user_id' => $user->id,
+                'order_number' => Order::generateOrderNumber(),
+                'delivery_address' => $validated['location'],
+                'notes' => $validated['custom_notes'] ?? null,
+                'status' => 'pending',
+                'source' => 'whatsapp',
+                'total_amount' => $totalAmount,
+            ]);
+
+            // Now create order items with the order_id
+            foreach ($itemsData as $itemData) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'orderable_type' => $itemData['orderable_type'],
+                    'orderable_id' => $itemData['orderable_id'],
+                    'quantity' => $itemData['quantity'],
+                    'price' => $itemData['price'],
+                    'notes' => $itemData['notes'],
+                ]);
+            }
 
             DB::commit();
 

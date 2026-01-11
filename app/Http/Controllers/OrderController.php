@@ -7,7 +7,6 @@ use App\Models\FoodItem;
 use App\Models\KitchenProduct;
 use App\Models\Order;
 use App\Models\OrderItem;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -18,14 +17,9 @@ class OrderController extends Controller
         try {
             DB::beginTransaction();
 
-            $order = new Order();
-            $order->user_id = Auth::id();
-            $order->order_number = Order::generateOrderNumber();
-            $order->delivery_address = $request->delivery_address;
-            $order->notes = $request->notes;
-            $order->status = 'pending';
-            $order->source = 'web';
+            // Calculate total amount first
             $totalAmount = 0;
+            $itemsData = [];
 
             foreach ($request->items as $item) {
                 if ($item['type'] === 'food') {
@@ -37,17 +31,38 @@ class OrderController extends Controller
                 $itemTotal = $product->price * $item['quantity'];
                 $totalAmount += $itemTotal;
 
-                $orderItem = new OrderItem();
-                $orderItem->orderable_type = $item['type'] === 'food' ? FoodItem::class : KitchenProduct::class;
-                $orderItem->orderable_id = $item['id'];
-                $orderItem->quantity = $item['quantity'];
-                $orderItem->price = $product->price;
-                $orderItem->notes = $item['notes'] ?? null;
-                $order->orderItems()->save($orderItem);
+                // Store item data for later
+                $itemsData[] = [
+                    'orderable_type' => $item['type'] === 'food' ? FoodItem::class : KitchenProduct::class,
+                    'orderable_id' => $item['id'],
+                    'quantity' => $item['quantity'],
+                    'price' => $product->price,
+                    'notes' => $item['notes'] ?? null,
+                ];
             }
 
-            $order->total_amount = $totalAmount;
-            $order->save();
+            // Create and save the order first (so it gets an ID)
+            $order = Order::create([
+                'user_id' => Auth::id(),
+                'order_number' => Order::generateOrderNumber(),
+                'delivery_address' => $request->delivery_address,
+                'notes' => $request->notes,
+                'status' => 'pending',
+                'source' => 'web',
+                'total_amount' => $totalAmount,
+            ]);
+
+            // Now create order items with the order_id
+            foreach ($itemsData as $itemData) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'orderable_type' => $itemData['orderable_type'],
+                    'orderable_id' => $itemData['orderable_id'],
+                    'quantity' => $itemData['quantity'],
+                    'price' => $itemData['price'],
+                    'notes' => $itemData['notes'],
+                ]);
+            }
 
             DB::commit();
 
