@@ -59,14 +59,34 @@
             <label for="bot_super_token" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Bot Super Token
             </label>
-            <input 
-                type="password" 
-                name="bot_super_token" 
-                id="bot_super_token" 
-                value="{{ old('bot_super_token', $botSuperToken) }}" 
-                class="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter bot super token for WhatsApp bot API"
-            >
+            <div class="flex gap-2">
+                <input 
+                    type="password" 
+                    name="bot_super_token" 
+                    id="bot_super_token" 
+                    value="{{ old('bot_super_token', $botSuperToken) }}" 
+                    class="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter bot super token for WhatsApp bot API"
+                >
+                <button 
+                    type="button" 
+                    id="generate-token-btn"
+                    onclick="generateBotToken()"
+                    class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors duration-200 whitespace-nowrap"
+                    title="Generate a new secure token"
+                >
+                    Generate Token
+                </button>
+                <button 
+                    type="button" 
+                    id="toggle-token-visibility"
+                    onclick="toggleTokenVisibility()"
+                    class="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-md font-medium transition-colors duration-200"
+                    title="Show/Hide token"
+                >
+                    <span id="toggle-icon">👁️</span>
+                </button>
+            </div>
             <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
                 Enter the super token for WhatsApp bot API authentication. This token will be used in the Authorization header: <code class="bg-blue-100 dark:bg-blue-800 px-2 py-1 rounded">Bearer YOUR_TOKEN</code>
             </p>
@@ -104,4 +124,56 @@
         </p>
     </div>
 </div>
+
+<script>
+    /**
+     * Generate a secure random token for the bot
+     */
+    function generateBotToken() {
+        // Generate a secure random token (64 characters)
+        const array = new Uint8Array(32);
+        window.crypto.getRandomValues(array);
+        const token = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+        
+        // Set the token in the input field
+        const tokenInput = document.getElementById('bot_super_token');
+        tokenInput.value = token;
+        
+        // Change input type to text temporarily to show the token
+        tokenInput.type = 'text';
+        
+        // Update toggle button state
+        const toggleIcon = document.getElementById('toggle-icon');
+        toggleIcon.textContent = '🙈';
+        
+        // Visual feedback
+        const generateBtn = document.getElementById('generate-token-btn');
+        const originalText = generateBtn.textContent;
+        generateBtn.textContent = '✓ Generated!';
+        generateBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+        generateBtn.classList.add('bg-green-500');
+        
+        setTimeout(() => {
+            generateBtn.textContent = originalText;
+            generateBtn.classList.remove('bg-green-500');
+            generateBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+        }, 2000);
+    }
+    
+    /**
+     * Toggle token visibility (show/hide)
+     */
+    function toggleTokenVisibility() {
+        const tokenInput = document.getElementById('bot_super_token');
+        const toggleIcon = document.getElementById('toggle-icon');
+        
+        if (tokenInput.type === 'password') {
+            tokenInput.type = 'text';
+            toggleIcon.textContent = '🙈';
+        } else {
+            tokenInput.type = 'password';
+            toggleIcon.textContent = '👁️';
+        }
+    }
+</script>
 @endsection
