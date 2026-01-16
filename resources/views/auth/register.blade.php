@@ -3,62 +3,65 @@
 @section('title', 'Register')
 
 @section('content')
-<div class="min-h-[calc(100vh-12rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+<div class="min-h-[calc(100vh-12rem)] flex items-center justify-center py-6 sm:py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-2xl w-full">
         <!-- Header -->
-        <div class="text-center mb-8 animate-fade-in">
-            <h2 class="text-4xl sm:text-5xl font-bold text-blue-900 dark:text-blue-100 mb-3">
+        <div class="text-center mb-4 sm:mb-8">
+            <a href="{{ route('home') }}" class="inline-block mb-3 sm:mb-4">
+                <img src="{{ asset('images/lg.jpeg') }}" alt="Monana Platform" class="h-10 sm:h-12 w-auto mx-auto">
+            </a>
+            <h2 class="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-2 sm:mb-3">
                 Jisajili Sasa
             </h2>
-            <p class="text-slate-600 dark:text-slate-400 text-lg">
+            <p class="text-sm sm:text-base text-[#a0a0a0]">
                 Tunaanza mazungumzo mafupi! 📝
             </p>
         </div>
 
         <!-- Chatbot Container -->
-        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl p-6 sm:p-8 relative overflow-hidden">
+        <div class="card rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-6 md:p-8 relative overflow-hidden">
             <!-- Decorative Background -->
             <div class="absolute top-0 right-0 w-64 h-64 bg-blue-100 dark:bg-blue-900 rounded-full blur-3xl opacity-20 -mr-32 -mt-32"></div>
             <div class="absolute bottom-0 left-0 w-64 h-64 bg-blue-100 dark:bg-blue-900 rounded-full blur-3xl opacity-20 -ml-32 -mb-32"></div>
             
             <!-- Chat Messages Container -->
-            <div id="chatContainer" class="space-y-6 mb-6 max-h-[500px] overflow-y-auto pr-2 relative z-10">
+            <div id="chatContainer" class="space-y-4 sm:space-y-6 mb-4 sm:mb-6 max-h-[400px] sm:max-h-[500px] overflow-y-auto pr-2 relative z-10">
                 <!-- Initial Bot Message -->
-                <div class="flex items-start space-x-3 message-item animate-slide-in">
-                    <div class="flex-shrink-0 w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg">
+                <div class="flex items-start space-x-2 sm:space-x-3 message-item animate-slide-in">
+                    <div class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white text-lg sm:text-xl font-bold shadow-lg">
                         🤖
                     </div>
-                    <div class="flex-1">
-                        <div class="bg-blue-50 dark:bg-blue-900/30 rounded-2xl rounded-tl-sm p-4 shadow-md">
-                            <p class="text-slate-800 dark:text-slate-200 text-base leading-relaxed" id="initialMessage">
-                                Habari! Karibu SmartFood Hub! 🍽️<br>Jina lako nani?
+                    <div class="flex-1 min-w-0">
+                        <div class="bg-blue-500/20 border border-blue-500/30 rounded-xl sm:rounded-2xl rounded-tl-sm p-3 sm:p-4 shadow-md">
+                            <p class="text-white text-sm sm:text-base leading-relaxed" id="initialMessage">
+                                Habari! Karibu Monana Platform! 🍽️<br>Jina lako nani?
                             </p>
                         </div>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 ml-1">SmartFood Bot</p>
+                        <p class="text-xs text-[#6b6b6b] mt-1 ml-1">Monana Bot</p>
                     </div>
                 </div>
             </div>
 
             <!-- Input Area -->
             <div class="relative z-10" id="inputArea">
-                <div class="flex items-center space-x-3">
+                <div class="flex items-center space-x-2 sm:space-x-3">
                     <div class="flex-1 relative">
                         <input 
                             type="text" 
                             id="userInput" 
                             autocomplete="off"
                             placeholder="Andika hapa..."
-                            class="w-full px-5 py-4 border-2 border-slate-300 dark:border-slate-600 rounded-2xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-base placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                            class="w-full px-4 sm:px-5 py-3 sm:py-4 bg-[#2d2d2d] border border-[#333] rounded-xl sm:rounded-2xl text-white placeholder-[#6b6b6b] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm sm:text-base"
                         >
-                        <div id="inputLoader" class="hidden absolute right-4 top-1/2 -translate-y-1/2">
-                            <div class="animate-spin rounded-full h-5 w-5 border-2 border-blue-500 border-t-transparent"></div>
+                        <div id="inputLoader" class="hidden absolute right-3 sm:right-4 top-1/2 -translate-y-1/2">
+                            <div class="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-2 border-blue-500 border-t-transparent"></div>
                         </div>
                     </div>
                     <button 
                         id="sendButton"
-                        class="flex-shrink-0 bg-blue-600 hover:bg-blue-700 text-white w-14 h-14 rounded-2xl flex items-center justify-center transition-all transform hover:scale-110 active:scale-95 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                        class="flex-shrink-0 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all transform hover:scale-110 active:scale-95 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                     >
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                         </svg>
                     </button>
@@ -67,38 +70,41 @@
                 <!-- Skip Button (for optional fields) -->
                 <button 
                     id="skipButton"
-                    class="hidden mt-3 text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    class="hidden mt-2 sm:mt-3 text-xs sm:text-sm text-[#a0a0a0] hover:text-blue-400 transition-colors"
                 >
                     Ruka hili (Si lazima) →
                 </button>
             </div>
 
             <!-- Progress Indicator -->
-            <div class="mt-6 relative z-10">
-                <div class="flex items-center justify-center space-x-2">
-                    <div id="progressStep1" class="w-3 h-3 rounded-full bg-blue-600 transition-all duration-300"></div>
-                    <div id="progressStep2" class="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-600 transition-all duration-300"></div>
-                    <div id="progressStep3" class="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-600 transition-all duration-300"></div>
-                    <div id="progressStep4" class="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-600 transition-all duration-300"></div>
-                    <div id="progressStep5" class="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-600 transition-all duration-300"></div>
-                    <div id="progressStep6" class="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-600 transition-all duration-300"></div>
+            <div class="mt-4 sm:mt-6 relative z-10">
+                <div class="flex items-center justify-center space-x-1.5 sm:space-x-2">
+                    <div id="progressStep1" class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-blue-600 transition-all duration-300"></div>
+                    <div id="progressStep2" class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-[#333] transition-all duration-300"></div>
+                    <div id="progressStep3" class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-[#333] transition-all duration-300"></div>
+                    <div id="progressStep4" class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-[#333] transition-all duration-300"></div>
+                    <div id="progressStep5" class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-[#333] transition-all duration-300"></div>
+                    <div id="progressStep6" class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-[#333] transition-all duration-300"></div>
                 </div>
-                <p class="text-center text-xs text-slate-500 dark:text-slate-400 mt-2">
+                <p class="text-center text-xs text-[#6b6b6b] mt-2">
                     Hatua <span id="currentStep">1</span> ya <span id="totalSteps">6</span>
                 </p>
             </div>
         </div>
 
         <!-- Footer Links -->
-        <div class="mt-6 text-center space-y-2 animate-fade-in">
-            <p class="text-slate-600 dark:text-slate-400">
+        <div class="mt-4 sm:mt-6 text-center space-y-2">
+            <p class="text-sm text-[#a0a0a0]">
                 Tayari una akaunti?
-                <a href="{{ route('login') }}" class="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 font-semibold ml-1">
+                <a href="{{ route('login') }}" class="text-blue-400 hover:text-blue-300 font-semibold ml-1 transition-colors">
                     Ingia hapa
                 </a>
             </p>
-            <a href="{{ route('home') }}" class="inline-block text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 text-sm">
-                ← Rudi nyumbani
+            <a href="{{ route('home') }}" class="inline-flex items-center text-xs sm:text-sm text-[#a0a0a0] hover:text-white transition-colors">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                Rudi nyumbani
             </a>
         </div>
     </div>
@@ -142,11 +148,12 @@
         background: #94a3b8;
     }
 
-    .dark #chatContainer::-webkit-scrollbar-thumb {
+    #chatContainer::-webkit-scrollbar-thumb {
         background: #475569;
+        border-radius: 3px;
     }
 
-    .dark #chatContainer::-webkit-scrollbar-thumb:hover {
+    #chatContainer::-webkit-scrollbar-thumb:hover {
         background: #64748b;
     }
 </style>
@@ -325,23 +332,23 @@
             messageDiv.innerHTML = `
                 <div class="flex-1 flex justify-end">
                     <div class="max-w-[80%]">
-                        <div class="bg-blue-600 text-white rounded-2xl rounded-tr-sm p-4 shadow-md ml-auto">
-                            <p class="text-white text-base leading-relaxed">${escapeHtml(text)}</p>
+                        <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl sm:rounded-2xl rounded-tr-sm p-3 sm:p-4 shadow-md ml-auto">
+                            <p class="text-white text-sm sm:text-base leading-relaxed">${escapeHtml(text)}</p>
                         </div>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 mr-1 text-right">Wewe</p>
+                        <p class="text-xs text-[#6b6b6b] mt-1 mr-1 text-right">Wewe</p>
                     </div>
                 </div>
             `;
         } else {
             messageDiv.innerHTML = `
-                <div class="flex-shrink-0 w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg">
+                <div class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white text-lg sm:text-xl font-bold shadow-lg">
                     🤖
                 </div>
-                <div class="flex-1">
-                    <div class="bg-blue-50 dark:bg-blue-900/30 rounded-2xl rounded-tl-sm p-4 shadow-md">
-                        <p class="text-slate-800 dark:text-slate-200 text-base leading-relaxed">${isHtml ? text : escapeHtml(text).replace(/\n/g, '<br>')}</p>
+                <div class="flex-1 min-w-0">
+                    <div class="bg-blue-500/20 border border-blue-500/30 rounded-xl sm:rounded-2xl rounded-tl-sm p-3 sm:p-4 shadow-md">
+                        <p class="text-white text-sm sm:text-base leading-relaxed">${isHtml ? text : escapeHtml(text).replace(/\n/g, '<br>')}</p>
                     </div>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 ml-1">SmartFood Bot</p>
+                    <p class="text-xs text-[#6b6b6b] mt-1 ml-1">Monana Bot</p>
                 </div>
             `;
         }
@@ -354,8 +361,8 @@
 
     function showError(message) {
         const errorDiv = document.createElement('div');
-        errorDiv.className = 'bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg mb-4 message-item';
-        errorDiv.innerHTML = `<p class="text-sm">${escapeHtml(message)}</p>`;
+        errorDiv.className = 'bg-red-500/20 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg mb-4 message-item';
+        errorDiv.innerHTML = `<p class="text-xs sm:text-sm">${escapeHtml(message)}</p>`;
         chatContainer.appendChild(errorDiv);
         chatContainer.scrollTop = chatContainer.scrollHeight;
         
@@ -385,11 +392,11 @@
         for (let i = 1; i <= 6; i++) {
             const stepElement = document.getElementById(`progressStep${i}`);
             if (i <= step) {
-                stepElement.classList.remove('bg-slate-300', 'dark:bg-slate-600');
+                stepElement.classList.remove('bg-[#333]');
                 stepElement.classList.add('bg-blue-600');
             } else {
                 stepElement.classList.remove('bg-blue-600');
-                stepElement.classList.add('bg-slate-300', 'dark:bg-slate-600');
+                stepElement.classList.add('bg-[#333]');
             }
         }
     }

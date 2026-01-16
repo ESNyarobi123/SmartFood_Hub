@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Cyber\Order as CyberOrder;
+use App\Models\Food\Order as FoodOrder;
+use App\Models\Food\Subscription as FoodSubscription;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -24,6 +27,7 @@ class User extends Authenticatable
         'phone',
         'address',
         'is_admin',
+        'preferred_service',
     ];
 
     /**
@@ -50,43 +54,135 @@ class User extends Authenticatable
         ];
     }
 
+    // ================================================
+    // LEGACY RELATIONSHIPS (for backward compatibility)
+    // ================================================
+
     /**
-     * Get the orders for the user.
+     * Get the legacy orders for the user.
      */
-    public function orders(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
     }
 
     /**
-     * Get the subscriptions for the user.
+     * Get the legacy subscriptions for the user.
      */
-    public function subscriptions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class);
     }
 
     /**
-     * Get the orders assigned to the user (for delivery staff).
+     * Get the legacy orders assigned to the user.
      */
-    public function assignedOrders(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function assignedOrders(): HasMany
     {
         return $this->hasMany(Order::class, 'assigned_to');
     }
 
     /**
-     * Get the subscription deliveries assigned to the user.
+     * Get the legacy subscription deliveries assigned to the user.
      */
-    public function assignedDeliveries(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function assignedDeliveries(): HasMany
     {
         return $this->hasMany(SubscriptionDelivery::class, 'assigned_to');
     }
 
+    // ================================================
+    // MONANA CYBER CAFE RELATIONSHIPS
+    // ================================================
+
     /**
-     * Get the notifications for the user.
+     * Get the user's Cyber Cafe orders.
      */
-    public function notifications(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function cyberOrders(): HasMany
+    {
+        return $this->hasMany(CyberOrder::class);
+    }
+
+    /**
+     * Get Cyber Cafe orders assigned to this user for delivery.
+     */
+    public function assignedCyberOrders(): HasMany
+    {
+        return $this->hasMany(CyberOrder::class, 'assigned_to');
+    }
+
+    // ================================================
+    // MONANA FOOD RELATIONSHIPS
+    // ================================================
+
+    /**
+     * Get the user's Food orders.
+     */
+    public function foodOrders(): HasMany
+    {
+        return $this->hasMany(FoodOrder::class);
+    }
+
+    /**
+     * Get the user's Food subscriptions.
+     */
+    public function foodSubscriptions(): HasMany
+    {
+        return $this->hasMany(FoodSubscription::class);
+    }
+
+    /**
+     * Get Food orders assigned to this user for delivery.
+     */
+    public function assignedFoodOrders(): HasMany
+    {
+        return $this->hasMany(FoodOrder::class, 'assigned_to');
+    }
+
+    // ================================================
+    // SHARED RELATIONSHIPS
+    // ================================================
+
+    /**
+     * Get all notifications for the user.
+     */
+    public function userNotifications(): HasMany
     {
         return $this->hasMany(Notification::class);
+    }
+
+    /**
+     * Get all payments for the user.
+     */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    // ================================================
+    // HELPER METHODS
+    // ================================================
+
+    /**
+     * Get count of active food subscriptions.
+     */
+    public function getActiveFoodSubscriptionsCount(): int
+    {
+        return $this->foodSubscriptions()->active()->count();
+    }
+
+    /**
+     * Get total orders count (both services).
+     */
+    public function getTotalOrdersCount(): int
+    {
+        return $this->cyberOrders()->count() + $this->foodOrders()->count();
+    }
+
+    /**
+     * Check if user prefers a specific service.
+     */
+    public function prefersService(string $service): bool
+    {
+        return $this->preferred_service === $service;
     }
 }

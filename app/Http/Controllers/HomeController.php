@@ -2,32 +2,46 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
-use App\Models\FoodItem;
-use App\Models\KitchenProduct;
-use App\Models\SubscriptionPackage;
-use Illuminate\Http\Request;
+use App\Models\Cyber\MenuItem;
+use App\Models\Food\Package;
+use App\Models\Food\Product;
+use App\Services\MealTimeService;
+use Illuminate\View\View;
 
 class HomeController extends Controller
 {
-    public function index(): \Illuminate\Contracts\View\View|\Illuminate\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\Foundation\Application
+    public function __construct(
+        private MealTimeService $mealTimeService
+    ) {}
+
+    public function index(): View
     {
-        $foodCategories = Category::where('type', 'food')
-            ->where('is_active', true)
-            ->with(['foodItems' => function ($query) {
-                $query->where('is_available', true);
-            }])
+        // Cyber Cafe data
+        $mealSlots = $this->mealTimeService->getSlotsWithStatus();
+        $cyberItemsCount = MenuItem::available()->count();
+
+        // Food service data
+        $packagesCount = Package::active()->count();
+        $productsCount = Product::available()->count();
+
+        // Featured items for each service
+        $featuredCyberItems = MenuItem::available()
+            ->ordered()
+            ->take(4)
             ->get();
 
-        $kitchenCategories = Category::where('type', 'kitchen')
-            ->where('is_active', true)
-            ->with(['kitchenProducts' => function ($query) {
-                $query->where('is_available', true);
-            }])
+        $featuredPackages = Package::active()
+            ->ordered()
+            ->take(3)
             ->get();
 
-        $subscriptionPackages = SubscriptionPackage::where('is_active', true)->get();
-
-        return view('home', compact('foodCategories', 'kitchenCategories', 'subscriptionPackages'));
+        return view('home', compact(
+            'mealSlots',
+            'cyberItemsCount',
+            'packagesCount',
+            'productsCount',
+            'featuredCyberItems',
+            'featuredPackages'
+        ));
     }
 }
