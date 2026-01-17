@@ -4,11 +4,13 @@ use App\Http\Controllers\Admin\Cyber\DashboardController as CyberDashboardContro
 use App\Http\Controllers\Admin\Cyber\MealSlotController;
 use App\Http\Controllers\Admin\Cyber\MenuController as CyberMenuController;
 use App\Http\Controllers\Admin\Cyber\OrderController as CyberOrderController;
+use App\Http\Controllers\Admin\Cyber\RevenueController as CyberRevenueController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\Food\DashboardController as FoodDashboardController;
 use App\Http\Controllers\Admin\Food\OrderController as FoodOrderController;
 use App\Http\Controllers\Admin\Food\PackageController;
 use App\Http\Controllers\Admin\Food\ProductController;
+use App\Http\Controllers\Admin\Food\RevenueController as FoodRevenueController;
 use App\Http\Controllers\Admin\Food\SubscriptionController as FoodSubscriptionController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\ConfirmationController;
@@ -126,6 +128,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', \App\Http\Middleware
         Route::get('/orders/{order}', [CyberOrderController::class, 'show'])->name('orders.show');
         Route::patch('/orders/{order}/status', [CyberOrderController::class, 'updateStatus'])->name('orders.update-status');
         Route::patch('/orders/{order}/assign', [CyberOrderController::class, 'assign'])->name('orders.assign');
+
+        // Revenue
+        Route::get('/revenue', [CyberRevenueController::class, 'index'])->name('revenue');
     });
 
     // ================================================
@@ -166,6 +171,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', \App\Http\Middleware
         Route::get('/orders/{order}', [FoodOrderController::class, 'show'])->name('orders.show');
         Route::patch('/orders/{order}/status', [FoodOrderController::class, 'updateStatus'])->name('orders.update-status');
         Route::patch('/orders/{order}/assign', [FoodOrderController::class, 'assign'])->name('orders.assign');
+
+        // Revenue
+        Route::get('/revenue', [FoodRevenueController::class, 'index'])->name('revenue');
     });
 
     // Settings

@@ -16,7 +16,7 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        // Cyber Cafe Stats
+        // Monana Market Stats
         $cyberOrders = CyberOrder::where('user_id', $user->id)
             ->with('mealSlot')
             ->latest()
@@ -31,7 +31,7 @@ class DashboardController extends Controller
             ->where('status', 'delivered')
             ->sum('total_amount');
 
-        // Monana Food Stats
+        // Monana Market Stats
         $foodOrders = FoodOrder::where('user_id', $user->id)
             ->latest()
             ->take(5)
@@ -59,7 +59,7 @@ class DashboardController extends Controller
 
         // Recent Activity (combined)
         $recentActivity = collect()
-            ->merge($cyberOrders->map(fn($order) => [
+            ->merge($cyberOrders->map(fn ($order) => [
                 'type' => 'cyber_order',
                 'id' => $order->id,
                 'title' => $order->order_number,
@@ -69,7 +69,7 @@ class DashboardController extends Controller
                 'date' => $order->created_at,
                 'url' => route('cyber.order.show', $order),
             ]))
-            ->merge($foodOrders->map(fn($order) => [
+            ->merge($foodOrders->map(fn ($order) => [
                 'type' => 'food_order',
                 'id' => $order->id,
                 'title' => $order->order_number,
@@ -79,11 +79,11 @@ class DashboardController extends Controller
                 'date' => $order->created_at,
                 'url' => route('food.order.show', $order),
             ]))
-            ->merge($subscriptions->map(fn($sub) => [
+            ->merge($subscriptions->map(fn ($sub) => [
                 'type' => 'subscription',
                 'id' => $sub->id,
                 'title' => $sub->package->name,
-                'description' => ucfirst($sub->status) . ' Subscription',
+                'description' => ucfirst($sub->status).' Subscription',
                 'status' => $sub->status,
                 'amount' => $sub->package->base_price,
                 'date' => $sub->created_at,

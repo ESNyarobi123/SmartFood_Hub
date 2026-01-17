@@ -10,7 +10,7 @@ use Illuminate\View\View;
 class PackageController extends Controller
 {
     /**
-     * Show the Monana Food landing page.
+     * Show the Monana Market landing page.
      */
     public function index(): View
     {

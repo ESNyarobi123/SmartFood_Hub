@@ -25,13 +25,13 @@ class PublicApiController extends Controller
             'data' => [
                 [
                     'id' => 'cyber',
-                    'name' => 'Monana Cyber Cafe',
+                    'name' => 'Monana Food',
                     'description' => 'Cooked food delivery with meal slots (Asubuhi, Mchana, Usiku)',
                     'icon' => 'computer',
                 ],
                 [
                     'id' => 'food',
-                    'name' => 'Monana Food',
+                    'name' => 'Monana Market',
                     'description' => 'Kitchen essentials - Packages & Custom Orders',
                     'icon' => 'shopping_cart',
                 ],
@@ -40,7 +40,7 @@ class PublicApiController extends Controller
     }
 
     /**
-     * Get Cyber Cafe menu items.
+     * Get Monana Food menu items.
      */
     public function getCyberMenu(): JsonResponse
     {

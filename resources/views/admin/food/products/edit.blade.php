@@ -14,8 +14,12 @@
             @if($product->image)
                 <div>
                     <label class="block text-sm font-medium text-white mb-2">Current Image</label>
-                    <div class="w-32 h-32 bg-[#333] rounded-lg overflow-hidden">
-                        <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                    <div class="inline-block p-4 bg-[#2d2d2d] border border-[#333] rounded-xl shadow-lg">
+                        <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-64 h-64 object-cover rounded-lg border border-[#444]">
+                    </div>
+                    <div class="mt-2">
+                        <p class="text-xs text-[#6b6b6b]">Current image path:</p>
+                        <p class="text-xs text-[#a0a0a0] font-mono break-all mt-1">{{ $product->image }}</p>
                     </div>
                 </div>
             @endif
@@ -96,10 +100,22 @@
                 <label for="image" class="block text-sm font-medium text-white mb-2">New Image</label>
                 <input type="file" name="image" id="image" accept="image/*"
                     class="w-full px-4 py-3 bg-[#2d2d2d] border border-[#333] rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#ff6b35] file:text-white file:font-medium hover:file:bg-[#e55a2b] file:cursor-pointer">
-                <p class="mt-1 text-xs text-[#6b6b6b]">Leave empty to keep current image</p>
+                <p class="mt-1 text-xs text-[#6b6b6b]">Leave empty to keep current image. Max 2MB.</p>
                 @error('image')
                     <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                 @enderror
+
+                <!-- New Image Preview -->
+                <div id="imagePreviewContainer" class="mt-4 hidden">
+                    <label class="block text-sm font-medium text-white mb-2">New Image Preview</label>
+                    <div class="inline-block p-4 bg-[#2d2d2d] border border-[#333] rounded-xl shadow-lg">
+                        <img id="imagePreview" src="" alt="Preview" class="w-64 h-64 object-cover rounded-lg border border-[#444]">
+                    </div>
+                    <div class="mt-2">
+                        <p class="text-xs text-[#6b6b6b]">New file path:</p>
+                        <p id="imagePath" class="text-xs text-[#a0a0a0] font-mono break-all mt-1"></p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -114,4 +130,26 @@
         </div>
     </form>
 </div>
+
+<script>
+// Image preview functionality
+document.getElementById('image')?.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    const preview = document.getElementById('imagePreview');
+    const pathDisplay = document.getElementById('imagePath');
+
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            previewContainer.classList.remove('hidden');
+            pathDisplay.textContent = file.name;
+        };
+        reader.readAsDataURL(file);
+    } else {
+        previewContainer.classList.add('hidden');
+    }
+});
+</script>
 @endsection

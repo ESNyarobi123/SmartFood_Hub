@@ -78,8 +78,8 @@
 
                 <!-- Desktop Navigation - Center -->
                 <div class="hidden lg:flex items-center justify-center flex-1 space-x-6 xl:space-x-8 mx-8">
-                    <a href="{{ route('cyber.index') }}" class="text-sm font-medium {{ request()->routeIs('home') ? 'text-gray-800 hover:text-red-600' : 'text-[#a0a0a0] hover:text-[#00d4aa]' }} transition-colors whitespace-nowrap">Cyber Cafe</a>
-                    <a href="{{ route('food.index') }}" class="text-sm font-medium {{ request()->routeIs('home') ? 'text-gray-800 hover:text-orange-500' : 'text-[#a0a0a0] hover:text-[#ff6b35]' }} transition-colors whitespace-nowrap">Monana Food</a>
+                    <a href="{{ route('cyber.index') }}" class="text-sm font-medium {{ request()->routeIs('home') ? 'text-gray-800 hover:text-red-600' : 'text-[#a0a0a0] hover:text-[#00d4aa]' }} transition-colors whitespace-nowrap">Monana Food</a>
+                    <a href="{{ route('food.index') }}" class="text-sm font-medium {{ request()->routeIs('home') ? 'text-gray-800 hover:text-orange-500' : 'text-[#a0a0a0] hover:text-[#ff6b35]' }} transition-colors whitespace-nowrap">Monana Market</a>
                 </div>
                 
                 <!-- Desktop Auth Section - Right -->
@@ -126,13 +126,13 @@
             <!-- Mobile Menu -->
             <div x-show="mobileMenuOpen" x-transition class="lg:hidden pb-4 border-t {{ request()->routeIs('home') ? 'border-gray-200' : 'border-[#333]' }}">
                 <div class="flex flex-col space-y-4 mt-4">
-                    <a href="{{ route('cyber.index') }}" class="text-sm font-medium {{ request()->routeIs('home') ? 'text-gray-700 hover:text-red-600' : 'text-[#a0a0a0] hover:text-[#00d4aa]' }} transition-colors px-2 py-2">Cyber Cafe</a>
-                    <a href="{{ route('food.index') }}" class="text-sm font-medium {{ request()->routeIs('home') ? 'text-gray-700 hover:text-orange-500' : 'text-[#a0a0a0] hover:text-[#ff6b35]' }} transition-colors px-2 py-2">Monana Food</a>
+                    <a href="{{ route('cyber.index') }}" class="text-sm font-medium {{ request()->routeIs('home') ? 'text-gray-700 hover:text-red-600' : 'text-[#a0a0a0] hover:text-[#00d4aa]' }} transition-colors px-2 py-2">Monana Food</a>
+                    <a href="{{ route('food.index') }}" class="text-sm font-medium {{ request()->routeIs('home') ? 'text-gray-700 hover:text-orange-500' : 'text-[#a0a0a0] hover:text-[#ff6b35]' }} transition-colors px-2 py-2">Monana Market</a>
                     @auth
                         <div class="border-t {{ request()->routeIs('home') ? 'border-gray-200' : 'border-[#333]' }} pt-4">
                             <a href="{{ route('dashboard') }}" class="block px-2 py-2 text-sm {{ request()->routeIs('home') ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-50' : 'text-[#a0a0a0] hover:text-white hover:bg-[#333]' }} rounded-lg">My Dashboard</a>
                             <a href="{{ route('food.dashboard') }}" class="block px-2 py-2 text-sm {{ request()->routeIs('home') ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-50' : 'text-[#a0a0a0] hover:text-white hover:bg-[#333]' }} rounded-lg">My Subscriptions</a>
-                            <a href="{{ route('cyber.orders') }}" class="block px-2 py-2 text-sm {{ request()->routeIs('home') ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-50' : 'text-[#a0a0a0] hover:text-white hover:bg-[#333]' }} rounded-lg">Cyber Orders</a>
+                            <a href="{{ route('cyber.orders') }}" class="block px-2 py-2 text-sm {{ request()->routeIs('home') ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-50' : 'text-[#a0a0a0] hover:text-white hover:bg-[#333]' }} rounded-lg">Monana Food Orders</a>
                             <a href="{{ route('food.orders') }}" class="block px-2 py-2 text-sm {{ request()->routeIs('home') ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-50' : 'text-[#a0a0a0] hover:text-white hover:bg-[#333]' }} rounded-lg">Food Orders</a>
                             @if(auth()->user()->is_admin)
                                 <a href="{{ route('admin.dashboard') }}" class="block px-2 py-2 text-sm {{ request()->routeIs('home') ? 'text-indigo-600 hover:text-indigo-700 hover:bg-gray-50' : 'text-indigo-400 hover:text-indigo-300 hover:bg-[#333]' }} rounded-lg">Admin Panel</a>
@@ -186,7 +186,7 @@
                 </div>
 
                 <div>
-                    <h4 class="text-sm font-bold text-gray-900 mb-4">Cyber Cafe</h4>
+                    <h4 class="text-sm font-bold text-gray-900 mb-4">Monana Food</h4>
                     <ul class="space-y-2">
                         <li><a href="{{ route('cyber.index') }}" class="text-sm text-gray-800 hover:text-red-600 transition-colors">Order Food</a></li>
                         <li><a href="{{ route('cyber.menu') }}" class="text-sm text-gray-800 hover:text-red-600 transition-colors">View Menu</a></li>

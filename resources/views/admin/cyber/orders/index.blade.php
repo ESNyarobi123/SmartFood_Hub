@@ -1,15 +1,15 @@
 @extends('admin.layout')
 
-@section('title', 'Cyber Orders')
-@section('subtitle', 'Manage Cyber Cafe orders')
+@section('title', 'Monana Food Orders')
+@section('subtitle', 'Manage Monana Food orders')
 
 @section('content')
 <div class="space-y-6">
     <!-- Header with Map Link -->
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-white">Cyber Orders</h1>
-            <p class="text-sm text-[#a0a0a0] mt-1">Manage Cyber Cafe orders</p>
+            <h1 class="text-2xl sm:text-3xl font-bold text-white">Monana Food Orders</h1>
+            <p class="text-sm text-[#a0a0a0] mt-1">Manage Monana Food orders</p>
         </div>
         <a href="{{ route('admin.cyber.orders.map') }}" class="px-4 py-2 bg-[#00d4aa] hover:bg-[#00b894] text-black font-medium rounded-lg transition-colors text-sm inline-flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

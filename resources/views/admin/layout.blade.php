@@ -431,6 +431,26 @@
             outline: none !important;
         }
 
+        /* Select dropdowns - ensure visibility */
+        select {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+            color: #ffffff !important;
+        }
+
+        select option {
+            background-color: #1a1a1a !important;
+            color: #ffffff !important;
+        }
+
+        select option:checked {
+            background-color: #ff7b54 !important;
+            color: #ffffff !important;
+        }
+
+        select option:hover {
+            background-color: #2d2d2d !important;
+        }
+
         /* Table Styling */
         table {
             border-collapse: separate;
@@ -650,12 +670,12 @@
                     <a href="{{ route('admin.dashboard') }}" class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: var(--gradient-purple);">
                         <span class="text-lg font-bold text-white">M</span>
                     </a>
-                    <a href="{{ route('admin.cyber.dashboard') }}" class="w-12 h-12 rounded-xl flex items-center justify-center hover:bg-white/10 transition-colors" title="Cyber Cafe">
+                    <a href="{{ route('admin.cyber.dashboard') }}" class="w-12 h-12 rounded-xl flex items-center justify-center hover:bg-white/10 transition-colors" title="Monana Food">
                         <svg class="w-6 h-6 text-[#00ffc8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                         </svg>
                     </a>
-                    <a href="{{ route('admin.food.dashboard') }}" class="w-12 h-12 rounded-xl flex items-center justify-center hover:bg-white/10 transition-colors" title="Monana Food">
+                    <a href="{{ route('admin.food.dashboard') }}" class="w-12 h-12 rounded-xl flex items-center justify-center hover:bg-white/10 transition-colors" title="Monana Market">
                         <svg class="w-6 h-6 text-[#ff7b54]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
                         </svg>
@@ -694,14 +714,14 @@
                         <svg class="w-5 h-5 mb-1 {{ request()->is('admin/cyber*') ? 'text-[#00ffc8]' : 'text-[#5c6b7f]' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                         </svg>
-                        <span class="text-xs font-semibold {{ request()->is('admin/cyber*') ? 'text-[#00ffc8]' : 'text-[#a8b2c1]' }}">Cyber</span>
+                        <span class="text-xs font-semibold {{ request()->is('admin/cyber*') ? 'text-[#00ffc8]' : 'text-[#a8b2c1]' }}">Food</span>
                     </a>
                     <a href="{{ route('admin.food.dashboard') }}" 
                        class="service-tab flex flex-col items-center p-3 rounded-xl border border-white/10 {{ request()->is('admin/food*') ? 'active-food' : 'hover:bg-white/5' }}">
                         <svg class="w-5 h-5 mb-1 {{ request()->is('admin/food*') ? 'text-[#ff7b54]' : 'text-[#5c6b7f]' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
                         </svg>
-                        <span class="text-xs font-semibold {{ request()->is('admin/food*') ? 'text-[#ff7b54]' : 'text-[#a8b2c1]' }}">Food</span>
+                        <span class="text-xs font-semibold {{ request()->is('admin/food*') ? 'text-[#ff7b54]' : 'text-[#a8b2c1]' }}">Market</span>
                     </a>
                 </div>
             </div>
@@ -720,9 +740,9 @@
                 </div>
 
                 @if(request()->is('admin/cyber*'))
-                <!-- Cyber Cafe Menu -->
+                <!-- Monana Food Menu -->
                 <div class="px-4 mb-2">
-                    <p class="text-[10px] text-[#5c6b7f] uppercase tracking-widest mb-2 px-4 font-semibold">Cyber Cafe</p>
+                    <p class="text-[10px] text-[#5c6b7f] uppercase tracking-widest mb-2 px-4 font-semibold">Monana Food</p>
                 </div>
                 <div class="px-4 space-y-1">
                     <a href="{{ route('admin.cyber.dashboard') }}" 
@@ -757,13 +777,20 @@
                             <span class="badge cyber ml-auto px-2.5 py-1 text-[10px] font-bold rounded-full">{{ $cyberPendingOrders }}</span>
                         @endif
                     </a>
+                    <a href="{{ route('admin.cyber.revenue') }}" 
+                       class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl {{ request()->routeIs('admin.cyber.revenue') ? 'active' : '' }}">
+                        <svg class="w-5 h-5 text-[#00ffc8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="text-sm font-medium text-[#e0e8f0]">Revenue</span>
+                    </a>
                 </div>
                 @endif
 
                 @if(request()->is('admin/food*'))
-                <!-- Monana Food Menu -->
+                <!-- Monana Market Menu -->
                 <div class="px-4 mb-2">
-                    <p class="text-[10px] text-[#5c6b7f] uppercase tracking-widest mb-2 px-4 font-semibold">Monana Food</p>
+                    <p class="text-[10px] text-[#5c6b7f] uppercase tracking-widest mb-2 px-4 font-semibold">Monana Market</p>
                 </div>
                 <div class="px-4 space-y-1">
                     <a href="{{ route('admin.food.dashboard') }}" 
@@ -808,6 +835,13 @@
                         @if($foodPendingOrders > 0)
                             <span class="badge food ml-auto px-2.5 py-1 text-[10px] font-bold rounded-full">{{ $foodPendingOrders }}</span>
                         @endif
+                    </a>
+                    <a href="{{ route('admin.food.revenue') }}" 
+                       class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl {{ request()->routeIs('admin.food.revenue') ? 'active' : '' }}">
+                        <svg class="w-5 h-5 text-[#ff7b54]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="text-sm font-medium text-[#e0e8f0]">Revenue</span>
                     </a>
                 </div>
                 @endif

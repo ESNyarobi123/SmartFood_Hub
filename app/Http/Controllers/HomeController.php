@@ -16,7 +16,7 @@ class HomeController extends Controller
 
     public function index(): View
     {
-        // Cyber Cafe data
+        // Monana Food data
         $mealSlots = $this->mealTimeService->getSlotsWithStatus();
         $cyberItemsCount = MenuItem::available()->count();
 

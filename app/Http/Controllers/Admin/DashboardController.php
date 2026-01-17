@@ -13,7 +13,7 @@ class DashboardController extends Controller
 {
     public function index(): View
     {
-        // Cyber Cafe Stats
+        // Monana Market Stats
         $cyberStats = [
             'pending_orders' => CyberOrder::where('status', 'pending')->count(),
             'today_orders' => CyberOrder::whereDate('created_at', today())->count(),
@@ -23,7 +23,7 @@ class DashboardController extends Controller
                 ->sum('total_amount'),
         ];
 
-        // Monana Food Stats
+        // Monana Market Stats
         $foodStats = [
             'active_subscriptions' => FoodSubscription::where('status', 'active')->count(),
             'pending_orders' => FoodOrder::where('status', 'pending')->count(),

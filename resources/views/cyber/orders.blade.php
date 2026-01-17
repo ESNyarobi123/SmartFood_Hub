@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'My Orders - Cyber Cafe')
+@section('title', 'My Orders - Monana Food')
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <!-- Header -->
     <div class="mb-8">
-        <h1 class="text-3xl font-bold text-white mb-2">My Cyber Cafe Orders</h1>
+        <h1 class="text-3xl font-bold text-white mb-2">My Monana Food Orders</h1>
         <p class="text-[#a0a0a0]">View your order history and track deliveries</p>
     </div>
 

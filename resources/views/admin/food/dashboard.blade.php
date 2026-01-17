@@ -1,6 +1,6 @@
 @extends('admin.layout')
 
-@section('title', 'Monana Food Dashboard')
+@section('title', 'Monana Market Dashboard')
 @section('subtitle', 'Manage kitchen products and subscriptions')
 
 @section('content')

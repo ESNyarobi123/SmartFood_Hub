@@ -56,7 +56,7 @@ class Payment extends Model
     // ================================================
 
     /**
-     * Get the Cyber Cafe order.
+     * Get the Monana Food order.
      */
     public function cyberOrder(): BelongsTo
     {
@@ -84,7 +84,7 @@ class Payment extends Model
     // ================================================
 
     /**
-     * Check if payment is for Cyber Cafe.
+     * Check if payment is for Monana Food.
      */
     public function isCyberPayment(): bool
     {

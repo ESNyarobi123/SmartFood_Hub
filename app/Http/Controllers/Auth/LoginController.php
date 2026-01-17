@@ -24,7 +24,11 @@ class LoginController extends Controller
         if (Auth::attempt($request->only('email', 'password'), $request->filled('remember'))) {
             $request->session()->regenerate();
 
-            return redirect()->intended(route('home'))
+            $redirectTo = Auth::user()->is_admin
+                ? route('admin.dashboard')
+                : route('dashboard');
+
+            return redirect()->intended($redirectTo)
                 ->with('success', 'Welcome back!');
         }
 
@@ -44,4 +48,3 @@ class LoginController extends Controller
             ->with('success', 'You have been logged out successfully.');
     }
 }
-

@@ -1,6 +1,6 @@
 @extends('admin.layout')
 
-@section('title', 'Cyber Cafe Dashboard')
+@section('title', 'Monana Food Dashboard')
 @section('subtitle', 'Manage cooked food orders and meal slots')
 
 @section('content')

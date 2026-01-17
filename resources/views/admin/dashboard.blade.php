@@ -88,7 +88,7 @@
                     <svg class="w-4 h-4 text-[#10b981] mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
                     </svg>
-                    <span class="text-xs text-[#10b981]">Cyber Cafe earnings</span>
+                    <span class="text-xs text-[#10b981]">Monana Food earnings</span>
                 </div>
             </div>
         </div>
@@ -96,7 +96,7 @@
 
     <!-- Service Quick Links -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Cyber Cafe Card -->
+        <!-- Monana Food Card -->
         <a href="{{ route('admin.cyber.dashboard') }}" class="card p-6 group relative overflow-hidden">
             <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style="background: radial-gradient(circle at top right, rgba(0, 255, 200, 0.1) 0%, transparent 60%);"></div>
             <div class="relative z-10">
@@ -107,7 +107,7 @@
                         </svg>
                     </div>
                     <div>
-                        <h3 class="text-xl font-bold text-white group-hover:text-[#00ffc8] transition-colors">Monana Cyber Cafe</h3>
+                        <h3 class="text-xl font-bold text-white group-hover:text-[#00ffc8] transition-colors">Monana Food</h3>
                         <p class="text-sm text-[#5c6b7f]">Cooked food delivery with meal slots</p>
                     </div>
                 </div>
@@ -133,7 +133,7 @@
             </div>
         </a>
 
-        <!-- Monana Food Card -->
+        <!-- Monana Market Card -->
         <a href="{{ route('admin.food.dashboard') }}" class="card p-6 group relative overflow-hidden">
             <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style="background: radial-gradient(circle at top right, rgba(255, 123, 84, 0.1) 0%, transparent 60%);"></div>
             <div class="relative z-10">
@@ -144,7 +144,7 @@
                         </svg>
                     </div>
                     <div>
-                        <h3 class="text-xl font-bold text-white group-hover:text-[#ff7b54] transition-colors">Monana Food</h3>
+                        <h3 class="text-xl font-bold text-white group-hover:text-[#ff7b54] transition-colors">Monana Market</h3>
                         <p class="text-sm text-[#5c6b7f]">Kitchen essentials & subscriptions</p>
                     </div>
                 </div>

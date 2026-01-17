@@ -1,7 +1,7 @@
 @extends('admin.layout')
 
 @section('title', 'Add Menu Item')
-@section('subtitle', 'Create a new menu item for Cyber Cafe')
+@section('subtitle', 'Create a new menu item for Monana Food')
 
 @section('content')
 <div class="max-w-2xl">
@@ -85,6 +85,18 @@
                 @error('image')
                     <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                 @enderror
+
+                <!-- Image Preview -->
+                <div id="imagePreviewContainer" class="mt-4 hidden">
+                    <label class="block text-sm font-medium text-white mb-2">Image Preview</label>
+                    <div class="inline-block p-4 bg-[#2d2d2d] border border-[#333] rounded-xl shadow-lg">
+                        <img id="imagePreview" src="" alt="Preview" class="w-64 h-64 object-cover rounded-lg border border-[#444]">
+                    </div>
+                    <div class="mt-2">
+                        <p class="text-xs text-[#6b6b6b]">File path:</p>
+                        <p id="imagePath" class="text-xs text-[#a0a0a0] font-mono break-all mt-1"></p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -109,5 +121,25 @@ function toggleMealSlotSelect(checkbox) {
         container.classList.remove('hidden');
     }
 }
+
+// Image preview functionality
+document.getElementById('image')?.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    const preview = document.getElementById('imagePreview');
+    const pathDisplay = document.getElementById('imagePath');
+
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            previewContainer.classList.remove('hidden');
+            pathDisplay.textContent = file.name;
+        };
+        reader.readAsDataURL(file);
+    } else {
+        previewContainer.classList.add('hidden');
+    }
+});
 </script>
 @endsection

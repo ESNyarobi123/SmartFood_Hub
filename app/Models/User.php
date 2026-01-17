@@ -91,11 +91,11 @@ class User extends Authenticatable
     }
 
     // ================================================
-    // MONANA CYBER CAFE RELATIONSHIPS
+    // MONANA FOOD RELATIONSHIPS
     // ================================================
 
     /**
-     * Get the user's Cyber Cafe orders.
+     * Get the user's Monana Food orders.
      */
     public function cyberOrders(): HasMany
     {
@@ -103,7 +103,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Get Cyber Cafe orders assigned to this user for delivery.
+     * Get Monana Food orders assigned to this user for delivery.
      */
     public function assignedCyberOrders(): HasMany
     {
@@ -111,7 +111,7 @@ class User extends Authenticatable
     }
 
     // ================================================
-    // MONANA FOOD RELATIONSHIPS
+    // MONANA MARKET RELATIONSHIPS
     // ================================================
 
     /**

@@ -18,7 +18,7 @@ class OrderController extends Controller
     ) {}
 
     /**
-     * Show the Cyber Cafe landing page.
+     * Show the Monana Food landing page.
      */
     public function index(): View
     {

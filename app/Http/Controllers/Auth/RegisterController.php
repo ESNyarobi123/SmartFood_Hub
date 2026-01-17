@@ -109,11 +109,15 @@ class RegisterController extends Controller
                 // Auto login and redirect
                 Auth::login($user);
 
+                $redirectTo = $user->is_admin
+                    ? route('admin.dashboard')
+                    : route('dashboard');
+
                 return response()->json([
                     'success' => true,
                     'completed' => true,
                     'message' => 'Akaunti yako imeundwa kwa mafanikio! Unakuja kwenye ukurasa wa kuingia...',
-                    'redirect' => route('home'),
+                    'redirect' => $redirectTo,
                 ]);
         }
 
@@ -191,7 +195,11 @@ class RegisterController extends Controller
 
         Auth::login($user);
 
-        return redirect()->route('home')
+        $redirectTo = $user->is_admin
+            ? route('admin.dashboard')
+            : route('dashboard');
+
+        return redirect($redirectTo)
             ->with('success', 'Account created successfully! Welcome to SmartFood Hub.');
     }
 }

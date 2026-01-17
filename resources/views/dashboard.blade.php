@@ -153,7 +153,7 @@
 
     <!-- Quick Actions -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-        <!-- Cyber Cafe Quick Action -->
+        <!-- Monana Food Quick Action -->
         <a href="{{ route('cyber.menu') }}" class="group card p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl hover:border-[#00ffc8]/50 transition-all duration-500 hover:scale-105 relative overflow-hidden">
             <div class="absolute inset-0 bg-gradient-to-r from-[#00ffc8]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <div class="relative">
@@ -164,7 +164,7 @@
                         </svg>
                     </div>
                     <div>
-                        <h3 class="text-2xl font-black text-white group-hover:text-[#00ffc8] transition-colors">Order Cyber Cafe</h3>
+                        <h3 class="text-2xl font-black text-white group-hover:text-[#00ffc8] transition-colors">Order Monana Food</h3>
                         <p class="text-sm text-[#5c6b7f]">Chakula kitamu kilichopikwa</p>
                     </div>
                 </div>
@@ -207,8 +207,8 @@
         <div class="flex items-center justify-between mb-6">
             <h2 class="text-3xl font-black text-white">Recent Activity</h2>
             <div class="flex items-center space-x-2">
-                <a href="{{ route('cyber.orders') }}" class="px-4 py-2 bg-white/5 hover:bg-white/10 text-white text-sm font-medium rounded-xl transition-colors">Cyber Orders</a>
-                <a href="{{ route('food.orders') }}" class="px-4 py-2 bg-white/5 hover:bg-white/10 text-white text-sm font-medium rounded-xl transition-colors">Food Orders</a>
+                <a href="{{ route('cyber.orders') }}" class="px-4 py-2 bg-white/5 hover:bg-white/10 text-white text-sm font-medium rounded-xl transition-colors">Monana Food Orders</a>
+                <a href="{{ route('food.orders') }}" class="px-4 py-2 bg-white/5 hover:bg-white/10 text-white text-sm font-medium rounded-xl transition-colors">Monana Market Orders</a>
             </div>
         </div>
 
@@ -275,7 +275,7 @@
                 <h3 class="text-xl font-bold text-white mb-2">No Activity Yet</h3>
                 <p class="text-[#5c6b7f] mb-6">Start ordering to see your activity here!</p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="{{ route('cyber.menu') }}" class="px-6 py-3 bg-gradient-to-r from-[#00ffc8] to-[#00d9f5] text-[#0a0a0f] font-bold rounded-xl hover:scale-105 transition-all">Order Cyber Cafe</a>
+                    <a href="{{ route('cyber.menu') }}" class="px-6 py-3 bg-gradient-to-r from-[#00ffc8] to-[#00d9f5] text-[#0a0a0f] font-bold rounded-xl hover:scale-105 transition-all">Order Monana Food</a>
                     <a href="{{ route('food.packages') }}" class="px-6 py-3 bg-gradient-to-r from-[#ff7b54] to-[#fee140] text-[#0a0a0f] font-bold rounded-xl hover:scale-105 transition-all">Browse Packages</a>
                 </div>
             </div>

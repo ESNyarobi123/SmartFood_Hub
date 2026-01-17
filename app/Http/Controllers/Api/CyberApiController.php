@@ -71,7 +71,7 @@ class CyberApiController extends Controller
     }
 
     /**
-     * Create a Cyber Cafe order.
+     * Create a Monana Food order.
      */
     public function createOrder(Request $request): JsonResponse
     {
