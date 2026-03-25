@@ -47,13 +47,36 @@
             <p class="text-sm sm:text-base text-[#a0a0a0]">Please select an open meal slot to see available items.</p>
         </div>
     @else
+        <div x-data="{ loaded: false }" x-init="$nextTick(() => { setTimeout(() => loaded = true, 150) })">
+        <!-- Skeleton Grid -->
+        <div x-show="!loaded" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 pb-20 sm:pb-24">
+            @for($i = 0; $i < min(6, $menuItems->count()); $i++)
+                <div class="card overflow-hidden">
+                    <div class="aspect-video skeleton"></div>
+                    <div class="p-3 sm:p-4 space-y-3">
+                        <div class="skeleton h-5 w-3/4 rounded"></div>
+                        <div class="skeleton h-3 w-full rounded"></div>
+                        <div class="skeleton h-3 w-2/3 rounded"></div>
+                        <div class="flex items-center justify-between pt-2">
+                            <div class="flex items-center space-x-3">
+                                <div class="skeleton w-8 h-8 rounded-lg"></div>
+                                <div class="skeleton w-8 h-5 rounded"></div>
+                                <div class="skeleton w-8 h-8 rounded-lg"></div>
+                            </div>
+                            <div class="skeleton h-4 w-16 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+            @endfor
+        </div>
+
         <!-- Menu Grid -->
-        <div id="menu-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 pb-20 sm:pb-24">
+        <div x-show="loaded" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" id="menu-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 pb-20 sm:pb-24">
             @foreach($menuItems as $item)
                 <div class="card overflow-hidden group" data-item-id="{{ $item->id }}">
                     <div class="aspect-video bg-[#333] relative overflow-hidden">
                         @if($item->image)
-                            <img src="{{ asset('storage/' . $item->image) }}" alt="{{ $item->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                            <img src="{{ asset('storage/' . $item->image) }}" alt="{{ $item->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy">
                         @else
                             <div class="w-full h-full flex items-center justify-center">
                                 <svg class="w-10 h-10 sm:w-12 sm:h-12 text-[#6b6b6b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -178,6 +201,7 @@
                 </div>
             </div>
         </div>
+        </div>
     @endif
 </div>
 
@@ -287,126 +311,8 @@ function closeCheckoutModal() {
     modal.classList.remove('flex');
 }
 
-function getCurrentLocation(isAutoCapture = false) {
-    const gpsBtn = document.getElementById('gps-btn');
-    const gpsStatus = document.getElementById('gps-status');
-    const addressInput = document.getElementById('delivery-address');
-    
-    if (!navigator.geolocation) {
-        if (!isAutoCapture) {
-            gpsStatus.textContent = 'Geolocation is not supported by your browser.';
-            gpsStatus.className = 'text-xs text-red-500 mt-1';
-        }
-        return;
-    }
-
-    // Only show button loading state if manually triggered
-    if (!isAutoCapture) {
-        gpsBtn.disabled = true;
-        gpsBtn.innerHTML = '<svg class="w-5 h-5 inline-block animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Getting location...';
-    }
-    gpsStatus.textContent = 'Getting your location...';
-    gpsStatus.className = 'text-xs text-[#00d4aa] mt-1';
-
-    navigator.geolocation.getCurrentPosition(
-        function(position) {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-
-            // Store coordinates
-            document.getElementById('delivery-lat').value = lat;
-            document.getElementById('delivery-lng').value = lng;
-
-            // Show coordinates and prompt for address
-            gpsStatus.textContent = `Location captured (${lat.toFixed(6)}, ${lng.toFixed(6)}). Please enter your full address below.`;
-            gpsStatus.className = 'text-xs text-green-500 mt-1';
-            
-            // Clear address input so user can type
-            if (!addressInput.value) {
-                addressInput.placeholder = 'Enter your delivery address (coordinates captured)';
-            }
-            
-            // Only update button if manually triggered
-            if (!isAutoCapture) {
-                gpsBtn.disabled = false;
-                gpsBtn.innerHTML = `
-                    <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                    Retry GPS
-                `;
-            } else {
-                // Reset button for auto-capture
-                if (gpsBtn) {
-                    gpsBtn.disabled = false;
-                    gpsBtn.innerHTML = `
-                        <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                        Retry GPS
-                    `;
-                }
-            }
-        },
-        function(error) {
-            // Only show error if not auto-capture, or show minimal message
-            if (!isAutoCapture) {
-                gpsBtn.disabled = false;
-                gpsBtn.innerHTML = `
-                    <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                    Retry GPS
-                `;
-            } else {
-                // Reset button for auto-capture failure
-                if (gpsBtn) {
-                    gpsBtn.disabled = false;
-                    gpsBtn.innerHTML = `
-                        <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                        Get GPS
-                    `;
-                }
-            }
-            
-            // Show minimal error for auto-capture, full error for manual
-            if (!isAutoCapture) {
-                let errorMsg = 'Unable to get your location. ';
-                switch(error.code) {
-                    case error.PERMISSION_DENIED:
-                        errorMsg += 'Location access denied.';
-                        break;
-                    case error.POSITION_UNAVAILABLE:
-                        errorMsg += 'Location information unavailable.';
-                        break;
-                    case error.TIMEOUT:
-                        errorMsg += 'Location request timeout.';
-                        break;
-                    default:
-                        errorMsg += 'An unknown error occurred.';
-                        break;
-                }
-                gpsStatus.textContent = errorMsg;
-                gpsStatus.className = 'text-xs text-red-500 mt-1';
-            } else {
-                // Silent fail for auto-capture, just show that user can click button
-                gpsStatus.textContent = 'Click "Get GPS" button if you want to share your location.';
-                gpsStatus.className = 'text-xs text-[#6b6b6b] mt-1';
-            }
-        },
-        {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0
-        }
-    );
-}
+// getCurrentLocation is now provided by the shared gps.js module (resources/js/gps.js)
+// Called with: getCurrentLocation(isAutoCapture, accentColor)
 
 function submitCheckout(event) {
     event.preventDefault();

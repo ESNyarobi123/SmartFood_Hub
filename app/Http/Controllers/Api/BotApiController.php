@@ -4,6 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\CheckPaymentStatus;
+use App\Models\Cyber\Order as CyberOrder;
+use App\Models\Food\Order as FoodOrder;
+use App\Models\Food\Package as FoodPackage;
+use App\Models\Food\Subscription as FoodSubscription;
 use App\Models\FoodItem;
 use App\Models\KitchenProduct;
 use App\Models\Notification;
@@ -246,13 +250,14 @@ class BotApiController extends Controller
 
     /**
      * Initiate payment for order or subscription.
+     * Supports: cyber_order, food_order, food_subscription + legacy order/subscription
      */
     public function initiatePayment(Request $request, ZenoPayService $zenoPay): JsonResponse
     {
         try {
             $validated = $request->validate([
                 'user_id' => 'required|integer|exists:users,id',
-                'type' => 'required|string|in:order,subscription',
+                'type' => 'required|string|in:order,subscription,cyber_order,food_order,food_subscription',
                 'id' => 'required|integer',
                 'method' => 'required|string|in:mpesa,tigopesa,airtelmoney',
                 'phone_number' => 'nullable|string|max:20',
@@ -268,29 +273,66 @@ class BotApiController extends Controller
             DB::beginTransaction();
 
             $user = User::findOrFail($validated['user_id']);
-            $orderId = Str::uuid()->toString();
+            $transactionId = Str::uuid()->toString();
             $amount = 0;
-            $orderModel = null;
-            $subscription = null;
+            $serviceType = null;
+            $paymentForeignKeys = [];
 
-            if ($validated['type'] === 'order') {
-                $orderModel = Order::findOrFail($validated['id']);
-                $amount = $orderModel->total_amount;
-            } else {
-                $subscription = Subscription::with('subscriptionPackage')->findOrFail($validated['id']);
-                $amount = $subscription->subscriptionPackage->price;
+            // Resolve the payable entity based on type
+            switch ($validated['type']) {
+                case 'cyber_order':
+                    $entity = CyberOrder::findOrFail($validated['id']);
+                    $amount = $entity->total_amount;
+                    $serviceType = 'cyber';
+                    $paymentForeignKeys = ['cyber_order_id' => $entity->id];
+                    break;
+
+                case 'food_order':
+                    $entity = FoodOrder::findOrFail($validated['id']);
+                    $amount = $entity->total_amount;
+                    $serviceType = 'food';
+                    $paymentForeignKeys = ['food_order_id' => $entity->id];
+                    break;
+
+                case 'food_subscription':
+                    $entity = FoodSubscription::with('package')->findOrFail($validated['id']);
+                    $amount = $entity->package?->base_price ?? $entity->total_amount ?? 0;
+                    $serviceType = 'food';
+                    $paymentForeignKeys = ['food_subscription_id' => $entity->id];
+                    break;
+
+                // Legacy fallbacks
+                case 'order':
+                    $entity = Order::findOrFail($validated['id']);
+                    $amount = $entity->total_amount;
+                    $paymentForeignKeys = ['order_id' => $entity->id];
+                    break;
+
+                case 'subscription':
+                    $entity = Subscription::with('subscriptionPackage')->findOrFail($validated['id']);
+                    $amount = $entity->subscriptionPackage->price;
+                    $paymentForeignKeys = ['subscription_id' => $entity->id];
+                    break;
+            }
+
+            if ($amount <= 0) {
+                DB::rollBack();
+
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Kiasi cha malipo si sahihi (0 au chini).',
+                ], 422);
             }
 
             // Create payment record
-            $payment = Payment::create([
-                'order_id' => $orderModel->id ?? null,
-                'subscription_id' => $subscription->id ?? null,
+            $payment = Payment::create(array_merge([
                 'amount' => $amount,
                 'payment_method' => 'mobile_money',
                 'phone_number' => $user->phone ?? null,
-                'transaction_id' => $orderId,
+                'transaction_id' => $transactionId,
                 'status' => 'pending',
-            ]);
+                'service_type' => $serviceType,
+            ], $paymentForeignKeys));
 
             // Format phone number - use provided phone or user's phone
             $phoneNumber = $validated['phone_number'] ?? $user->phone ?? '';
@@ -299,7 +341,7 @@ class BotApiController extends Controller
 
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Phone number is required for payment',
+                    'message' => 'Namba ya simu inahitajika kwa malipo',
                 ], 422);
             }
 
@@ -315,7 +357,7 @@ class BotApiController extends Controller
 
             // Initiate payment with ZenoPay
             $paymentData = [
-                'order_id' => $orderId,
+                'order_id' => $transactionId,
                 'buyer_email' => $user->email,
                 'buyer_name' => $user->name,
                 'buyer_phone' => $phoneNumber,
@@ -341,7 +383,8 @@ class BotApiController extends Controller
             return response()->json([
                 'status' => 'pending',
                 'payment_id' => $payment->id,
-                'message' => 'Lipia STK push imetumwa',
+                'amount' => (float) $amount,
+                'message' => 'STK push imetumwa kwenye simu yako',
             ]);
         } catch (ValidationException $e) {
             DB::rollBack();
@@ -399,44 +442,61 @@ class BotApiController extends Controller
     }
 
     /**
-     * Resolve user by phone number - create if not exists (Quick method).
+     * Resolve user by whatsapp_jid or phone number - check if exists, don't auto-create.
      */
     public function resolveUser(Request $request): JsonResponse
     {
         try {
             $validated = $request->validate([
-                'phone_number' => 'required|string|max:20',
-                'name' => 'nullable|string|max:255',
+                'phone_number' => 'required|string|max:30',
+                'whatsapp_jid' => 'nullable|string|max:50',
             ]);
 
-            // Format phone number
-            $phoneNumber = preg_replace('/[^0-9]/', '', $validated['phone_number']);
-            if (str_starts_with($phoneNumber, '255')) {
-                $phoneNumber = '0'.substr($phoneNumber, 3);
-            } elseif (! str_starts_with($phoneNumber, '0')) {
-                $phoneNumber = '0'.$phoneNumber;
+            $rawPhone = $validated['phone_number'];
+            $jid = $validated['whatsapp_jid'] ?? null;
+
+            // 1) Try finding user by whatsapp_jid first (most reliable for returning bot users)
+            $user = null;
+            if ($jid) {
+                $user = User::where('whatsapp_jid', $jid)->first();
             }
 
-            // Try to find existing user
-            $user = User::where('phone', $phoneNumber)->first();
+            // 2) If not found by JID, try formatted phone number
+            if (! $user) {
+                $phoneNumber = preg_replace('/[^0-9]/', '', $rawPhone);
+                if (str_starts_with($phoneNumber, '255')) {
+                    $phoneNumber = '0'.substr($phoneNumber, 3);
+                } elseif (str_starts_with($phoneNumber, '0') && strlen($phoneNumber) >= 10 && strlen($phoneNumber) <= 13) {
+                    // Already in 07xx format, keep as-is
+                } elseif (strlen($phoneNumber) >= 9 && strlen($phoneNumber) <= 10) {
+                    $phoneNumber = '0'.$phoneNumber;
+                }
+                // Only search by phone if it looks like a valid Tanzanian number
+                if (strlen($phoneNumber) >= 10 && strlen($phoneNumber) <= 13) {
+                    $user = User::where('phone', $phoneNumber)->first();
+                }
+            }
 
             if (! $user) {
-                // Create new user if not exists (quick registration)
-                $user = User::create([
-                    'name' => $validated['name'] ?? 'User',
-                    'email' => 'user_'.uniqid().'@smartfoodhub.local',
-                    'phone' => $phoneNumber,
-                    'password' => bcrypt(Str::random(32)), // Random password for bot users
+                return response()->json([
+                    'status' => 'not_registered',
+                    'message' => 'Namba hii haijasajiliwa. Tafadhali jisajili kwanza.',
                 ]);
             }
 
+            // Update whatsapp_jid if not set yet (web user coming to WhatsApp)
+            if ($jid && ! $user->whatsapp_jid) {
+                $user->update(['whatsapp_jid' => $jid]);
+            }
+
             return response()->json([
-                'status' => 'success',
+                'status' => 'registered',
                 'user_id' => $user->id,
                 'name' => $user->name,
                 'phone' => $user->phone,
                 'email' => $user->email,
-                'created' => $user->wasRecentlyCreated,
+                'address' => $user->address,
+                'source' => $user->source ?? 'web',
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -447,27 +507,34 @@ class BotApiController extends Controller
     }
 
     /**
-     * Register a new user through bot (Full registration).
+     * Register a new user through bot.
+     * Email is optional (auto-generated if not provided).
+     * Password is generated and returned so bot can send it to user for web login.
      */
     public function registerUser(Request $request): JsonResponse
     {
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255|unique:users,email',
-                'phone' => 'required|string|max:20|unique:users,phone',
-                'address' => 'nullable|string|max:1000',
+                'phone' => 'required|string|max:20',
+                'address' => 'required|string|max:1000',
+                'email' => 'nullable|string|email|max:255|unique:users,email',
+                'whatsapp_jid' => 'nullable|string|max:50',
             ], [
-                'email.unique' => 'Barua pepe hii tayari imetumika. Tafadhali tumia nyingine.',
-                'phone.unique' => 'Nambari ya simu hii tayari imetumika. Tafadhali tumia nyingine.',
+                'email.unique' => 'Barua pepe hii tayari imetumika.',
+                'name.required' => 'Jina linahitajika.',
+                'phone.required' => 'Namba ya simu inahitajika.',
+                'address.required' => 'Eneo linahitajika.',
             ]);
 
             DB::beginTransaction();
 
-            // Format phone number
+            // Format phone number (Tanzanian)
             $phoneNumber = preg_replace('/[^0-9]/', '', $validated['phone']);
             if (str_starts_with($phoneNumber, '255')) {
                 $phoneNumber = '0'.substr($phoneNumber, 3);
+            } elseif (str_starts_with($phoneNumber, '+255')) {
+                $phoneNumber = '0'.substr(preg_replace('/[^0-9]/', '', $phoneNumber), 3);
             } elseif (! str_starts_with($phoneNumber, '0')) {
                 $phoneNumber = '0'.$phoneNumber;
             }
@@ -477,39 +544,59 @@ class BotApiController extends Controller
             if ($existingUser) {
                 DB::rollBack();
 
+                // Auto-link whatsapp_jid if not set yet
+                if (! empty($validated['whatsapp_jid']) && ! $existingUser->whatsapp_jid) {
+                    $existingUser->update(['whatsapp_jid' => $validated['whatsapp_jid']]);
+                }
+
                 return response()->json([
-                    'status' => 'error',
-                    'message' => 'User with this phone number already exists',
+                    'status' => 'already_exists',
+                    'message' => 'Namba hii tayari imesajiliwa.',
                     'user_id' => $existingUser->id,
-                ], 422);
+                    'name' => $existingUser->name,
+                    'phone' => $existingUser->phone,
+                    'address' => $existingUser->address,
+                ], 200);
             }
+
+            // Generate a readable password for web login (e.g., "monana7842")
+            $plainPassword = 'monana'.rand(1000, 9999);
+
+            // Auto-generate email if not provided
+            $email = $validated['email'] ?? 'bot_'.$phoneNumber.'@monana.local';
 
             // Create new user
             $user = User::create([
                 'name' => $validated['name'],
-                'email' => $validated['email'],
+                'email' => $email,
                 'phone' => $phoneNumber,
-                'address' => $validated['address'] ?? null,
-                'password' => bcrypt(Str::random(32)), // Random password for bot users
+                'whatsapp_jid' => $validated['whatsapp_jid'] ?? null,
+                'address' => $validated['address'],
+                'password' => bcrypt($plainPassword),
+                'source' => 'whatsapp',
             ]);
 
             DB::commit();
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'User amesajiliwa kwa mafanikio',
+                'message' => 'Akaunti yako imeundwa kwa mafanikio!',
                 'user_id' => $user->id,
                 'name' => $user->name,
-                'email' => $user->email,
                 'phone' => $user->phone,
                 'address' => $user->address,
+                'web_login' => [
+                    'phone' => $phoneNumber,
+                    'password' => $plainPassword,
+                    'note' => 'Tumia namba ya simu na password hii kuingia kwenye website yetu.',
+                ],
             ], 201);
         } catch (ValidationException $e) {
             DB::rollBack();
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'Validation failed',
+                'message' => 'Taarifa hazikukamilika.',
                 'errors' => $e->errors(),
             ], 422);
         } catch (\Exception $e) {
@@ -517,7 +604,92 @@ class BotApiController extends Controller
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to register user: '.$e->getMessage(),
+                'message' => 'Imeshindwa kusajili: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get combined user status - active orders + subscriptions dashboard.
+     */
+    public function getUserStatus(int $id): JsonResponse
+    {
+        $user = User::find($id);
+
+        if (! $user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User not found',
+            ], 404);
+        }
+
+        try {
+            // Active Cyber orders (not delivered/cancelled)
+            $cyberOrders = $user->cyberOrders()
+                ->whereNotIn('status', ['delivered', 'cancelled'])
+                ->latest()
+                ->take(5)
+                ->get()
+                ->map(fn ($order) => [
+                    'order_id' => $order->id,
+                    'order_number' => $order->order_number ?? 'CYB-'.$order->id,
+                    'status' => $order->status,
+                    'total_amount' => (float) ($order->total_amount ?? 0),
+                    'created_at' => $order->created_at?->format('Y-m-d H:i') ?? '',
+                ]);
+
+            // Active Food orders (not delivered/cancelled)
+            $foodOrders = $user->foodOrders()
+                ->whereNotIn('status', ['delivered', 'cancelled'])
+                ->latest()
+                ->take(5)
+                ->get()
+                ->map(fn ($order) => [
+                    'order_id' => $order->id,
+                    'order_number' => $order->order_number ?? 'FD-'.$order->id,
+                    'status' => $order->status,
+                    'total_amount' => (float) ($order->total_amount ?? 0),
+                    'created_at' => $order->created_at?->format('Y-m-d H:i') ?? '',
+                ]);
+
+            // Active subscriptions
+            $subscriptions = $user->foodSubscriptions()
+                ->whereIn('status', ['active', 'paused', 'pending'])
+                ->with('package')
+                ->latest()
+                ->take(5)
+                ->get()
+                ->map(fn ($sub) => [
+                    'subscription_id' => $sub->id,
+                    'package_name' => $sub->package?->name ?? 'Kifurushi',
+                    'status' => $sub->status,
+                    'start_date' => $sub->start_date?->toDateString() ?? '',
+                    'end_date' => $sub->end_date?->toDateString() ?? '',
+                    'days_remaining' => $sub->end_date ? max(0, (int) now()->diffInDays($sub->end_date, false)) : 0,
+                    'delivery_address' => $sub->delivery_address ?? '',
+                ]);
+
+            return response()->json([
+                'status' => 'success',
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'phone' => $user->phone,
+                    'address' => $user->address,
+                ],
+                'cyber_orders' => $cyberOrders,
+                'food_orders' => $foodOrders,
+                'subscriptions' => $subscriptions,
+                'summary' => [
+                    'active_cyber_orders' => $cyberOrders->count(),
+                    'active_food_orders' => $foodOrders->count(),
+                    'active_subscriptions' => $subscriptions->count(),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Imeshindwa kupata taarifa: '.$e->getMessage(),
             ], 500);
         }
     }

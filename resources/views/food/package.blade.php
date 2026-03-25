@@ -111,10 +111,14 @@
     <!-- Subscribe Button -->
     <div class="card p-6 text-center">
         @auth
-            <form method="POST" action="{{ route('food.packages.subscribe', $package) }}">
+            <form method="POST" action="{{ route('food.packages.subscribe', $package) }}" x-data="{ submitting: false }" @submit="submitting = true">
                 @csrf
-                <button type="submit" class="w-full sm:w-auto px-8 py-4 bg-[#ff6b35] hover:bg-[#e55a2b] text-white font-bold text-lg rounded-lg transition-colors">
-                    Subscribe to This Package
+                <button type="submit" 
+                        :disabled="submitting"
+                        :class="submitting ? 'opacity-60 cursor-not-allowed' : 'hover:bg-[#e55a2b]'"
+                        class="w-full sm:w-auto px-8 py-4 bg-[#ff6b35] text-white font-bold text-lg rounded-lg transition-colors inline-flex items-center justify-center gap-2">
+                    <svg x-show="submitting" class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <span x-text="submitting ? 'Subscribing...' : 'Subscribe to This Package'">Subscribe to This Package</span>
                 </button>
             </form>
             <p class="text-sm text-[#6b6b6b] mt-4">You'll be able to customize items before each delivery.</p>

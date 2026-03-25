@@ -26,6 +26,7 @@ class RegisterController extends Controller
         $registrationData = session()->get('registration_data', []);
 
         // Handle different steps
+        // New order: 1=Name, 2=Phone(required), 3=Address(required), 4=Email, 5=Password, 6=Confirm
         switch ($step) {
             case 1: // Name
                 $validated = $request->validate([
@@ -35,7 +36,44 @@ class RegisterController extends Controller
                 session()->put('registration_step', 2);
                 break;
 
-            case 2: // Email
+            case 2: // Phone (REQUIRED)
+                $validated = $request->validate([
+                    'answer' => 'required|string|max:20',
+                ], [
+                    'answer.required' => 'Namba ya simu inahitajika.',
+                ]);
+
+                // Format phone number
+                $phone = preg_replace('/[^0-9]/', '', $validated['answer']);
+                if (str_starts_with($phone, '255')) {
+                    $phone = '0'.substr($phone, 3);
+                } elseif (! str_starts_with($phone, '0')) {
+                    $phone = '0'.$phone;
+                }
+
+                // Check if phone already exists
+                if (User::where('phone', $phone)->exists()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Namba hii ya simu tayari imetumika. Tafadhali tumia nyingine au ingia kwenye akaunti yako.',
+                    ], 422);
+                }
+
+                $registrationData['phone'] = $phone;
+                session()->put('registration_step', 3);
+                break;
+
+            case 3: // Address (REQUIRED)
+                $validated = $request->validate([
+                    'answer' => 'required|string|max:1000',
+                ], [
+                    'answer.required' => 'Eneo lako linahitajika kwa delivery.',
+                ]);
+                $registrationData['address'] = $validated['answer'];
+                session()->put('registration_step', 4);
+                break;
+
+            case 4: // Email
                 $validated = $request->validate([
                     'answer' => 'required|string|email|max:255|unique:users,email',
                 ], [
@@ -43,30 +81,6 @@ class RegisterController extends Controller
                     'answer.email' => 'Tafadhali ingiza barua pepe halali.',
                 ]);
                 $registrationData['email'] = $validated['answer'];
-                session()->put('registration_step', 3);
-                break;
-
-            case 3: // Phone (optional)
-                if ($request->has('answer') && trim($request->answer) !== '') {
-                    $validated = $request->validate([
-                        'answer' => 'nullable|string|max:20',
-                    ]);
-                    $registrationData['phone'] = trim($validated['answer']) ?: null;
-                } else {
-                    $registrationData['phone'] = null;
-                }
-                session()->put('registration_step', 4);
-                break;
-
-            case 4: // Address (optional)
-                if ($request->has('answer') && trim($request->answer) !== '') {
-                    $validated = $request->validate([
-                        'answer' => 'nullable|string|max:1000',
-                    ]);
-                    $registrationData['address'] = trim($validated['answer']) ?: null;
-                } else {
-                    $registrationData['address'] = null;
-                }
                 session()->put('registration_step', 5);
                 break;
 
@@ -97,9 +111,10 @@ class RegisterController extends Controller
                 $user = User::create([
                     'name' => $registrationData['name'],
                     'email' => $registrationData['email'],
-                    'phone' => $registrationData['phone'] ?? null,
-                    'address' => $registrationData['address'] ?? null,
+                    'phone' => $registrationData['phone'],
+                    'address' => $registrationData['address'],
                     'password' => Hash::make($registrationData['password']),
+                    'source' => 'web',
                 ]);
 
                 // Clear registration session
@@ -129,17 +144,17 @@ class RegisterController extends Controller
             'success' => true,
             'step' => session()->get('registration_step'),
             'message' => $this->getQuestionForStep(session()->get('registration_step')),
-            'isOptional' => in_array(session()->get('registration_step'), [3, 4]),
+            'isOptional' => false,
         ]);
     }
 
     protected function getQuestionForStep(int $step): string
     {
         return match ($step) {
-            1 => 'Habari! Karibu SmartFood Hub! 🍽️<br>Jina lako nani?',
-            2 => 'Asante! Barua pepe yako ni ipi?',
-            3 => 'Namba ya simu yako? (Si lazima)',
-            4 => 'Anwani yako ya uwekaji? (Si lazima)',
+            1 => 'Habari! Karibu Monana Platform! 🍽️<br>Jina lako nani?',
+            2 => 'Asante! Namba yako ya simu ni ipi?<br><small class="text-[#6b6b6b]">Mfano: 0712345678</small>',
+            3 => 'Uko eneo gani? (Kwa delivery)<br><small class="text-[#6b6b6b]">Mfano: Kijitonyama, Makumbusho</small>',
+            4 => 'Barua pepe yako ni ipi?',
             5 => 'Weka password ya siri:',
             6 => 'Thibitisha password yako:',
             default => 'Tafadhali jibu swali hili...',
@@ -148,29 +163,7 @@ class RegisterController extends Controller
 
     public function skipOptional(Request $request): \Illuminate\Http\JsonResponse
     {
-        $step = session()->get('registration_step', 1);
-
-        if (in_array($step, [3, 4])) {
-            $registrationData = session()->get('registration_data', []);
-
-            if ($step === 3) {
-                $registrationData['phone'] = null;
-                session()->put('registration_step', 4);
-            } elseif ($step === 4) {
-                $registrationData['address'] = null;
-                session()->put('registration_step', 5);
-            }
-
-            session()->put('registration_data', $registrationData);
-
-            return response()->json([
-                'success' => true,
-                'step' => session()->get('registration_step'),
-                'message' => $this->getQuestionForStep(session()->get('registration_step')),
-                'isOptional' => in_array(session()->get('registration_step'), [3, 4]),
-            ]);
-        }
-
+        // No optional steps anymore — all fields are required
         return response()->json(['success' => false]);
     }
 

@@ -20,6 +20,23 @@
         </div>
     </div>
 
+    <!-- Search / Filter Bar -->
+    @if($products->isNotEmpty())
+    <div class="mb-5 sm:mb-6" x-data="{ search: '' }" x-init="$watch('search', val => filterProducts(val))">
+        <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <svg class="w-5 h-5 text-[#6b6b6b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+            <input type="text" x-model="search" placeholder="Tafuta bidhaa... mfano: mchele, sukari, nyanya"
+                class="w-full pl-12 pr-10 py-3 bg-[#1a1a1a] border border-[#333] rounded-xl text-white text-sm placeholder-[#555] focus:outline-none focus:border-[#ff6b35]/50 focus:ring-1 focus:ring-[#ff6b35]/20 transition-all">
+            <button x-show="search.length > 0" @click="search = ''" class="absolute inset-y-0 right-0 pr-4 flex items-center text-[#6b6b6b] hover:text-white transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <p id="search-count" class="text-xs text-[#6b6b6b] mt-2 hidden"></p>
+    </div>
+    @endif
+
     @if($products->isEmpty())
         <div class="card p-6 sm:p-8 lg:p-12 text-center">
             <svg class="w-12 h-12 sm:w-16 sm:h-16 text-[#333] mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -29,20 +46,49 @@
             <p class="text-sm sm:text-base text-[#a0a0a0]">No products are currently available for custom orders.</p>
         </div>
     @else
-        <!-- Products Grid -->
-        <div id="products-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 pb-20 sm:pb-24">
-            @foreach($products as $product)
-                <div class="card overflow-hidden group" data-item-id="{{ $product->id }}">
-                    <div class="aspect-video bg-[#333] relative overflow-hidden">
-                        @if($product->image)
-                            <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
-                        @else
-                            <div class="w-full h-full flex items-center justify-center">
-                                <svg class="w-10 h-10 sm:w-12 sm:h-12 text-[#6b6b6b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                                </svg>
+        <div x-data="{ loaded: false }" x-init="$nextTick(() => { setTimeout(() => loaded = true, 150) })">
+        <!-- Skeleton Grid -->
+        <div x-show="!loaded" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 pb-20 sm:pb-24">
+            @for($i = 0; $i < min(6, $products->count()); $i++)
+                <div class="card overflow-hidden">
+                    <div class="aspect-video skeleton"></div>
+                    <div class="p-3 sm:p-4 space-y-3">
+                        <div class="skeleton h-5 w-3/4 rounded"></div>
+                        <div class="skeleton h-3 w-full rounded"></div>
+                        <div class="skeleton h-3 w-1/3 rounded"></div>
+                        <div class="flex items-center justify-between pt-2">
+                            <div class="flex items-center space-x-3">
+                                <div class="skeleton w-8 h-8 rounded-lg"></div>
+                                <div class="skeleton w-8 h-5 rounded"></div>
+                                <div class="skeleton w-8 h-8 rounded-lg"></div>
                             </div>
-                        @endif
+                            <div class="skeleton h-4 w-16 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+            @endfor
+        </div>
+
+        <!-- Products Grid -->
+        @php
+            $customFallbacks = [
+                'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&h=300&fit=crop&q=75',
+                'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=400&h=300&fit=crop&q=75',
+                'https://images.unsplash.com/photo-1587486913049-53fc88980cfc?w=400&h=300&fit=crop&q=75',
+                'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400&h=300&fit=crop&q=75',
+                'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&h=300&fit=crop&q=75',
+                'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop&q=75',
+            ];
+        @endphp
+        <div x-show="loaded" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" id="products-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 pb-20 sm:pb-24">
+            @foreach($products as $product)
+                <div class="card overflow-hidden group hover:border-[#ff6b35]/30 transition-all duration-300" data-item-id="{{ $product->id }}" data-name="{{ strtolower($product->name) }}">
+                    <div class="aspect-video bg-[#2a2a2a] relative overflow-hidden">
+                        <img src="{{ $product->image ? asset('storage/' . $product->image) : $customFallbacks[$loop->index % count($customFallbacks)] }}"
+                             alt="{{ $product->name }}"
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                             loading="lazy"
+                             onerror="this.onerror=null;this.src='{{ $customFallbacks[$loop->index % count($customFallbacks)] }}'">
                         <div class="absolute top-2 right-2 px-2 py-1 bg-[#ff6b35] text-white text-xs sm:text-sm font-bold rounded">
                             TZS {{ number_format($product->price, 0) }}/{{ $product->unit }}
                         </div>
@@ -129,7 +175,7 @@
                                     placeholder="Andika anwani yako kamili ya utumaji...&#10;Mfano:&#10;Soko la Kariakoo&#10;Barabara ya Nyamwezi&#10;Jengo la Mkuu, Ghorofa ya 2"></textarea>
                             </div>
                             <div class="flex justify-end">
-                                <button type="button" onclick="getCurrentLocation()" id="gps-btn"
+                                <button type="button" onclick="getCurrentLocation(false, '#ff6b35')" id="gps-btn"
                                     class="px-4 py-2.5 bg-[#ff6b35] hover:bg-[#e55a2b] text-white font-semibold rounded-lg transition-colors text-sm whitespace-nowrap">
                                     <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
@@ -166,6 +212,7 @@
                 </div>
             </div>
         </div>
+        </div>
     @endif
 </div>
 
@@ -174,6 +221,28 @@ const cart = {};
 const prices = {};
 const productUnits = {};
 const productNames = {};
+
+function filterProducts(query) {
+    const cards = document.querySelectorAll('#products-container [data-item-id]');
+    const q = query.toLowerCase().trim();
+    let visible = 0;
+    cards.forEach(card => {
+        const name = card.getAttribute('data-name') || '';
+        if (!q || name.includes(q)) {
+            card.style.display = '';
+            visible++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    const countEl = document.getElementById('search-count');
+    if (q) {
+        countEl.textContent = `Bidhaa ${visible} zimepatikana`;
+        countEl.classList.remove('hidden');
+    } else {
+        countEl.classList.add('hidden');
+    }
+}
 
 document.querySelectorAll('[data-price]').forEach(el => {
     const itemId = el.id.replace('total-', '');
@@ -266,7 +335,7 @@ function openCheckoutModal() {
     
     // Automatically capture GPS location when modal opens
     setTimeout(() => {
-        getCurrentLocation(true); // Pass true to indicate auto-capture (don't show button loading)
+        getCurrentLocation(true, '#ff6b35'); // Pass true to indicate auto-capture (don't show button loading)
         document.getElementById('delivery-address').focus();
     }, 100);
 }
@@ -277,126 +346,8 @@ function closeCheckoutModal() {
     modal.classList.remove('flex');
 }
 
-function getCurrentLocation(isAutoCapture = false) {
-    const gpsBtn = document.getElementById('gps-btn');
-    const gpsStatus = document.getElementById('gps-status');
-    const addressInput = document.getElementById('delivery-address');
-    
-    if (!navigator.geolocation) {
-        if (!isAutoCapture) {
-            gpsStatus.textContent = 'Geolocation is not supported by your browser.';
-            gpsStatus.className = 'text-xs text-red-500 mt-1';
-        }
-        return;
-    }
-
-    // Only show button loading state if manually triggered
-    if (!isAutoCapture) {
-        gpsBtn.disabled = true;
-        gpsBtn.innerHTML = '<svg class="w-5 h-5 inline-block animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Getting location...';
-    }
-    gpsStatus.textContent = 'Getting your location...';
-    gpsStatus.className = 'text-xs text-[#ff6b35] mt-1';
-
-    navigator.geolocation.getCurrentPosition(
-        function(position) {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-
-            // Store coordinates
-            document.getElementById('delivery-lat').value = lat;
-            document.getElementById('delivery-lng').value = lng;
-
-            // Show coordinates and prompt for address
-            gpsStatus.textContent = `Location captured (${lat.toFixed(6)}, ${lng.toFixed(6)}). Please enter your full address below.`;
-            gpsStatus.className = 'text-xs text-green-500 mt-1';
-            
-            // Clear address input so user can type
-            if (!addressInput.value) {
-                addressInput.placeholder = 'Enter your delivery address (coordinates captured)';
-            }
-            
-            // Only update button if manually triggered
-            if (!isAutoCapture) {
-                gpsBtn.disabled = false;
-                gpsBtn.innerHTML = `
-                    <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                    Retry GPS
-                `;
-            } else {
-                // Reset button for auto-capture
-                if (gpsBtn) {
-                    gpsBtn.disabled = false;
-                    gpsBtn.innerHTML = `
-                        <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                        Retry GPS
-                    `;
-                }
-            }
-        },
-        function(error) {
-            // Only show error if not auto-capture, or show minimal message
-            if (!isAutoCapture) {
-                gpsBtn.disabled = false;
-                gpsBtn.innerHTML = `
-                    <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                    Retry GPS
-                `;
-            } else {
-                // Reset button for auto-capture failure
-                if (gpsBtn) {
-                    gpsBtn.disabled = false;
-                    gpsBtn.innerHTML = `
-                        <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                        Get GPS
-                    `;
-                }
-            }
-            
-            // Show minimal error for auto-capture, full error for manual
-            if (!isAutoCapture) {
-                let errorMsg = 'Unable to get your location. ';
-                switch(error.code) {
-                    case error.PERMISSION_DENIED:
-                        errorMsg += 'Location access denied.';
-                        break;
-                    case error.POSITION_UNAVAILABLE:
-                        errorMsg += 'Location information unavailable.';
-                        break;
-                    case error.TIMEOUT:
-                        errorMsg += 'Location request timeout.';
-                        break;
-                    default:
-                        errorMsg += 'An unknown error occurred.';
-                        break;
-                }
-                gpsStatus.textContent = errorMsg;
-                gpsStatus.className = 'text-xs text-red-500 mt-1';
-            } else {
-                // Silent fail for auto-capture, just show that user can click button
-                gpsStatus.textContent = 'Click "Get GPS" button if you want to share your location.';
-                gpsStatus.className = 'text-xs text-[#6b6b6b] mt-1';
-            }
-        },
-        {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0
-        }
-    );
-}
+// getCurrentLocation is now provided by the shared gps.js module (resources/js/gps.js)
+// Called with: getCurrentLocation(isAutoCapture, accentColor)
 
 function submitCheckout(event) {
     event.preventDefault();

@@ -8,8 +8,8 @@
     <title>@yield('title', 'Monana Platform') - Food Delivery & Kitchen Essentials</title>
 
     <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -64,11 +64,55 @@
         .glow-food:hover {
             box-shadow: 0 0 30px rgba(255, 107, 53, 0.3);
         }
+
+        /* Page transition */
+        .page-enter {
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Focus visible for accessibility */
+        *:focus-visible {
+            outline: 2px solid #8b5cf6;
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+
+        /* Skeleton pulse */
+        .skeleton {
+            background: linear-gradient(90deg, #2d2d2d 25%, #3a3a3a 50%, #2d2d2d 75%);
+            background-size: 200% 100%;
+            animation: skeletonShimmer 1.5s ease-in-out infinite;
+        }
+
+        @keyframes skeletonShimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .home-page .skeleton {
+            background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+            background-size: 200% 100%;
+            animation: skeletonShimmer 1.5s ease-in-out infinite;
+        }
     </style>
 </head>
 <body class="min-h-screen {{ request()->routeIs('home') ? 'home-page' : '' }}">
     <!-- Navigation -->
-    <nav class="fixed top-0 left-0 right-0 z-50 {{ request()->routeIs('home') ? 'bg-white backdrop-blur-lg border-b border-gray-200' : 'bg-[#1a1a1a]/90 backdrop-blur-lg border-b border-[#333]' }}" x-data="{ mobileMenuOpen: false }">
+    <nav class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 {{ request()->routeIs('home') ? '' : 'bg-[#1a1a1a]/90 backdrop-blur-lg border-b border-[#333]' }}"
+         x-data="{ mobileMenuOpen: false, scrolled: false }"
+         x-init="window.addEventListener('scroll', () => { scrolled = window.scrollY > 20 })"
+         :class="{ 'bg-white/95 backdrop-blur-lg border-b border-gray-200 shadow-sm': (scrolled || mobileMenuOpen) && {{ request()->routeIs('home') ? 'true' : 'false' }}, 'bg-transparent': !(scrolled || mobileMenuOpen) && {{ request()->routeIs('home') ? 'true' : 'false' }} }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center h-16 w-full">
                 <!-- Logo -->
@@ -124,7 +168,7 @@
             </div>
 
             <!-- Mobile Menu -->
-            <div x-show="mobileMenuOpen" x-transition class="lg:hidden pb-4 border-t {{ request()->routeIs('home') ? 'border-gray-200' : 'border-[#333]' }}">
+            <div x-show="mobileMenuOpen" x-transition class="lg:hidden pb-4 border-t {{ request()->routeIs('home') ? 'border-gray-200 bg-white/95 backdrop-blur-lg -mx-4 px-4 sm:-mx-6 sm:px-6 rounded-b-2xl' : 'border-[#333]' }}">
                 <div class="flex flex-col space-y-4 mt-4">
                     <a href="{{ route('cyber.index') }}" class="text-sm font-medium {{ request()->routeIs('home') ? 'text-gray-700 hover:text-red-600' : 'text-[#a0a0a0] hover:text-[#00d4aa]' }} transition-colors px-2 py-2">Monana Food</a>
                     <a href="{{ route('food.index') }}" class="text-sm font-medium {{ request()->routeIs('home') ? 'text-gray-700 hover:text-orange-500' : 'text-[#a0a0a0] hover:text-[#ff6b35]' }} transition-colors px-2 py-2">Monana Market</a>
@@ -153,69 +197,96 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="pt-14">
+    <!-- Toast Notifications -->
+    @if(session('success') || session('error'))
+    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 translate-y-2 sm:translate-x-2"
+         x-transition:enter-end="opacity-100 translate-y-0 sm:translate-x-0"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 translate-y-0 sm:translate-x-0"
+         x-transition:leave-end="opacity-0 translate-y-2 sm:translate-x-2"
+         class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[200] max-w-sm w-full pointer-events-auto">
         @if(session('success'))
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-                <div class="bg-green-500/20 border border-green-500/50 text-green-400 px-4 py-3 rounded-lg">
-                    {{ session('success') }}
-                </div>
-            </div>
+        <div class="flex items-start gap-3 bg-[#1a2e1a] border border-green-500/40 text-green-300 px-4 py-3.5 rounded-xl shadow-2xl backdrop-blur-lg" role="alert">
+            <svg class="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <div class="flex-1 text-sm font-medium">{{ session('success') }}</div>
+            <button @click="show = false" class="text-green-400/60 hover:text-green-300 flex-shrink-0" aria-label="Close notification"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+        </div>
         @endif
-
         @if(session('error'))
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-                <div class="bg-red-500/20 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg">
-                    {{ session('error') }}
-                </div>
-            </div>
+        <div class="flex items-start gap-3 bg-[#2e1a1a] border border-red-500/40 text-red-300 px-4 py-3.5 rounded-xl shadow-2xl backdrop-blur-lg" role="alert">
+            <svg class="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <div class="flex-1 text-sm font-medium">{{ session('error') }}</div>
+            <button @click="show = false" class="text-red-400/60 hover:text-red-300 flex-shrink-0" aria-label="Close notification"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+        </div>
         @endif
+    </div>
+    @endif
 
+    <!-- Main Content -->
+    <main class="pt-14 page-enter">
         @yield('content')
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 mt-12 sm:mt-16 md:mt-20">
+    <footer class="{{ request()->routeIs('home') ? 'bg-white border-t border-gray-200' : 'bg-[#0f0f0f] border-t border-[#222]' }} mt-12 sm:mt-16 md:mt-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 md:py-12">
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
                 <div>
                     <div class="mb-4">
-                        <img src="{{ asset('images/lg.jpeg') }}" alt="Monana Group Logo" class="h-12 w-auto object-contain">
+                        <img src="{{ asset('images/lg.jpeg') }}" alt="Monana Group Logo" class="h-12 w-auto object-contain" loading="lazy">
                     </div>
-                    <p class="text-sm text-gray-800">Your one-stop platform for cooked food delivery and kitchen essentials.</p>
+                    <p class="text-sm {{ request()->routeIs('home') ? 'text-gray-600' : 'text-[#9ca3af]' }}">Your one-stop platform for cooked food delivery and kitchen essentials.</p>
                 </div>
 
                 <div>
-                    <h4 class="text-sm font-bold text-gray-900 mb-4">Monana Food</h4>
+                    <h4 class="text-sm font-bold {{ request()->routeIs('home') ? 'text-gray-900' : 'text-white' }} mb-4">Monana Food</h4>
                     <ul class="space-y-2">
-                        <li><a href="{{ route('cyber.index') }}" class="text-sm text-gray-800 hover:text-red-600 transition-colors">Order Food</a></li>
-                        <li><a href="{{ route('cyber.menu') }}" class="text-sm text-gray-800 hover:text-red-600 transition-colors">View Menu</a></li>
+                        <li><a href="{{ route('cyber.index') }}" class="text-sm {{ request()->routeIs('home') ? 'text-gray-600 hover:text-red-600' : 'text-[#9ca3af] hover:text-[#00d4aa]' }} transition-colors">Order Food</a></li>
+                        <li><a href="{{ route('cyber.menu') }}" class="text-sm {{ request()->routeIs('home') ? 'text-gray-600 hover:text-red-600' : 'text-[#9ca3af] hover:text-[#00d4aa]' }} transition-colors">View Menu</a></li>
                     </ul>
                 </div>
 
                 <div>
-                    <h4 class="text-sm font-bold text-gray-900 mb-4">Monana Food</h4>
+                    <h4 class="text-sm font-bold {{ request()->routeIs('home') ? 'text-gray-900' : 'text-white' }} mb-4">Monana Market</h4>
                     <ul class="space-y-2">
-                        <li><a href="{{ route('food.packages') }}" class="text-sm text-gray-800 hover:text-orange-500 transition-colors">Packages</a></li>
-                        <li><a href="{{ route('food.custom') }}" class="text-sm text-gray-800 hover:text-orange-500 transition-colors">Custom Order</a></li>
+                        <li><a href="{{ route('food.packages') }}" class="text-sm {{ request()->routeIs('home') ? 'text-gray-600 hover:text-orange-500' : 'text-[#9ca3af] hover:text-[#ff6b35]' }} transition-colors">Packages</a></li>
+                        <li><a href="{{ route('food.custom') }}" class="text-sm {{ request()->routeIs('home') ? 'text-gray-600 hover:text-orange-500' : 'text-[#9ca3af] hover:text-[#ff6b35]' }} transition-colors">Custom Order</a></li>
                     </ul>
                 </div>
 
                 <div>
-                    <h4 class="text-sm font-bold text-gray-900 mb-4">Contact</h4>
+                    <h4 class="text-sm font-bold {{ request()->routeIs('home') ? 'text-gray-900' : 'text-white' }} mb-4">Contact</h4>
                     <ul class="space-y-2">
-                        <li class="text-sm text-gray-800">WhatsApp: +255 7XX XXX XXX</li>
-                        <li class="text-sm text-gray-800">Email: info@monana.com</li>
+                        <li class="text-sm {{ request()->routeIs('home') ? 'text-gray-600' : 'text-[#9ca3af]' }}">WhatsApp: +255 7XX XXX XXX</li>
+                        <li class="text-sm {{ request()->routeIs('home') ? 'text-gray-600' : 'text-[#9ca3af]' }}">Email: info@monana.com</li>
                     </ul>
                 </div>
             </div>
 
-            <div class="mt-8 pt-8 border-t border-gray-200 text-center">
-                <p class="text-sm text-gray-800">&copy; {{ date('Y') }} Monana Platform. All rights reserved.</p>
+            <div class="mt-8 pt-8 {{ request()->routeIs('home') ? 'border-t border-gray-200' : 'border-t border-[#222]' }} text-center">
+                <p class="text-sm {{ request()->routeIs('home') ? 'text-gray-600' : 'text-[#9ca3af]' }}">&copy; {{ date('Y') }} Monana Platform. All rights reserved.</p>
             </div>
         </div>
     </footer>
 
-    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <!-- Back to Top Button -->
+    <button x-data="{ visible: false }"
+            x-init="window.addEventListener('scroll', () => { visible = window.scrollY > 400 })"
+            x-show="visible"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 scale-75"
+            x-transition:enter-end="opacity-100 scale-100"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100 scale-100"
+            x-transition:leave-end="opacity-0 scale-75"
+            @click="window.scrollTo({ top: 0, behavior: 'smooth' })"
+            class="fixed bottom-6 left-6 z-[100] w-11 h-11 bg-[#242424] hover:bg-[#333] border border-[#444] text-white rounded-full shadow-xl flex items-center justify-center transition-all hover:scale-110 {{ request()->routeIs('home') ? 'bg-gray-900 hover:bg-gray-800 border-gray-700' : '' }}"
+            aria-label="Scroll to top">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+    </button>
+
+    <script src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js" defer></script>
 </body>
 </html>

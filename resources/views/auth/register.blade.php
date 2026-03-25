@@ -192,15 +192,11 @@
     function handleSubmit() {
         const answer = userInput.value.trim();
         
-        if (!answer && currentStep <= 4) {
-            return;
-        }
-
-        if (currentStep === 5 || currentStep === 6) {
-            if (!answer) {
+        if (!answer) {
+            if (currentStep === 5 || currentStep === 6) {
                 showError('Tafadhali weka password.');
-                return;
             }
+            return;
         }
 
         // Disable input and show loader

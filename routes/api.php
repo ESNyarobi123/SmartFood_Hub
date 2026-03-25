@@ -50,6 +50,7 @@ Route::prefix('bot')->middleware('bot.auth')->group(function () {
     Route::post('/user/resolve', [BotApiController::class, 'resolveUser'])->name('api.bot.user.resolve');
     Route::post('/user/register', [BotApiController::class, 'registerUser'])->name('api.bot.user.register');
     Route::get('/user/{id}', [BotApiController::class, 'getUser'])->name('api.bot.user.show');
+    Route::get('/user/{id}/status', [BotApiController::class, 'getUserStatus'])->name('api.bot.user.status');
     Route::put('/user/{id}', [BotApiController::class, 'updateUser'])->name('api.bot.user.update');
     Route::post('/location', [BotApiController::class, 'updateLocation'])->name('api.bot.location.update');
 

@@ -23,8 +23,9 @@ class OrderController extends Controller
     public function index(): View
     {
         $mealSlots = $this->mealTimeService->getSlotsWithStatus();
+        $featuredItems = MenuItem::available()->ordered()->take(4)->get();
 
-        return view('cyber.index', compact('mealSlots'));
+        return view('cyber.index', compact('mealSlots', 'featuredItems'));
     }
 
     /**

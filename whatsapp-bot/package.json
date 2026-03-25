@@ -1,0 +1,17 @@
+{
+  "name": "monana-whatsapp-bot",
+  "version": "1.0.0",
+  "description": "Monana Platform WhatsApp Bot - Baileys v7",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "baileys": "^6.7.16",
+    "pino": "^9.6.0",
+    "axios": "^1.7.0",
+    "qrcode-terminal": "^0.12.0"
+  }
+}

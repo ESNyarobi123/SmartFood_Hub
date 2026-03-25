@@ -25,9 +25,11 @@ class User extends Authenticatable
         'email',
         'password',
         'phone',
+        'whatsapp_jid',
         'address',
         'is_admin',
         'preferred_service',
+        'source',
     ];
 
     /**
