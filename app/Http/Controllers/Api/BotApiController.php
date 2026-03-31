@@ -652,10 +652,16 @@ class BotApiController extends Controller
                     'created_at' => $order->created_at?->format('Y-m-d H:i') ?? '',
                 ]);
 
-            // Active subscriptions
+            // Subscriptions (active + recently expired/cancelled)
             $subscriptions = $user->foodSubscriptions()
-                ->whereIn('status', ['active', 'paused', 'pending'])
-                ->with('package')
+                ->where(function ($q) {
+                    $q->whereIn('status', ['active', 'paused', 'pending'])
+                      ->orWhere(function ($q2) {
+                          $q2->whereIn('status', ['expired', 'cancelled'])
+                             ->where('updated_at', '>=', now()->subDays(30));
+                      });
+                })
+                ->with(['package', 'payments' => fn ($q) => $q->latest()->limit(1)])
                 ->latest()
                 ->take(5)
                 ->get()
@@ -667,6 +673,8 @@ class BotApiController extends Controller
                     'end_date' => $sub->end_date?->toDateString() ?? '',
                     'days_remaining' => $sub->end_date ? max(0, (int) now()->diffInDays($sub->end_date, false)) : 0,
                     'delivery_address' => $sub->delivery_address ?? '',
+                    'payment_status' => $sub->payments->first()?->status ?? 'unpaid',
+                    'expired_at' => $sub->expired_at?->toDateString() ?? null,
                 ]);
 
             return response()->json([

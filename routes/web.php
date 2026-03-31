@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\Food\SubscriptionController as FoodSubscriptionCo
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\ConfirmationController;
 use App\Http\Controllers\Cyber\OrderController as CyberCustomerOrderController;
+use App\Http\Controllers\DailyOpsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Food\OrderController as FoodCustomerOrderController;
 use App\Http\Controllers\Food\PackageController as FoodCustomerPackageController;
@@ -27,6 +28,9 @@ use Illuminate\Support\Facades\Route;
 // PUBLIC ROUTES
 // ================================================
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+// Daily Operations — public shareable link (token-based)
+Route::get('/ops/{token}', [DailyOpsController::class, 'show'])->name('ops.daily');
 
 // ================================================
 // AUTHENTICATION ROUTES
@@ -164,6 +168,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', \App\Http\Middleware
         Route::post('/subscriptions/{subscription}/pause', [FoodSubscriptionController::class, 'pause'])->name('subscriptions.pause');
         Route::post('/subscriptions/{subscription}/resume', [FoodSubscriptionController::class, 'resume'])->name('subscriptions.resume');
         Route::post('/subscriptions/{subscription}/cancel', [FoodSubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
+        Route::patch('/subscriptions/{subscription}/status', [FoodSubscriptionController::class, 'updateStatus'])->name('subscriptions.update-status');
 
         // Orders
         Route::get('/orders', [FoodOrderController::class, 'index'])->name('orders.index');
@@ -179,4 +184,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', \App\Http\Middleware
     // Settings
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
+    Route::post('/settings/ops-link', [SettingsController::class, 'generateOpsLink'])->name('settings.generate-ops-link');
+    Route::delete('/settings/ops-link', [SettingsController::class, 'revokeOpsLink'])->name('settings.revoke-ops-link');
 });

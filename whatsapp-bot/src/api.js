@@ -121,6 +121,11 @@ class MonanaAPI {
         return data;
     }
 
+    async getSubscriptionHistory(userId) {
+        const { data } = await this.client.get(`/food/subscriptions/history/${userId}`);
+        return data;
+    }
+
     async pauseSubscription(subscriptionId) {
         const { data } = await this.client.post('/food/subscription/pause', {
             subscription_id: subscriptionId,
@@ -132,6 +137,19 @@ class MonanaAPI {
         const { data } = await this.client.post('/food/subscription/resume', {
             subscription_id: subscriptionId,
         });
+        return data;
+    }
+
+    async customizeSubscription({ subscriptionId, date, action, originalProductId, newProductId, quantity }) {
+        const payload = {
+            subscription_id: subscriptionId,
+            date,
+            action,
+        };
+        if (originalProductId) payload.original_product_id = originalProductId;
+        if (newProductId) payload.new_product_id = newProductId;
+        if (quantity) payload.quantity = quantity;
+        const { data } = await this.client.post('/food/subscription/customize', payload);
         return data;
     }
 
@@ -152,6 +170,11 @@ class MonanaAPI {
 
     async getFoodOrderHistory(userId) {
         const { data } = await this.client.get(`/food/orders/history/${userId}`);
+        return data;
+    }
+
+    async getCyberOrder(orderId) {
+        const { data } = await this.client.get(`/cyber/order/${orderId}`);
         return data;
     }
 

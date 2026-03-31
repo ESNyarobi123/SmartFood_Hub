@@ -4,18 +4,31 @@ import {
     formatMealSlots,
     formatMenuItems,
     formatCurrency,
+    formatCart,
     formatOrderConfirmation,
     mainMenuMessage,
+    paymentMethodMessage,
+    paymentPendingMessage,
+    paymentGatewayError,
+    paymentFailedMessage,
+    paymentTimeoutMessage,
+    paymentSuccessMessage,
+    statusEmoji,
+    statusLabel,
 } from '../utils/formatter.js';
 
 /**
  * Handle Monana Food (Cyber Cafe) flow
+ * — Meal slots → Menu → Cart → Order → Payment → Track
  */
 export async function handleCyber(jid, text, send) {
     const session = getSession(jid);
 
     switch (session.state) {
-        // ─── Show available meal slots ───
+
+        // ═══════════════════════════════════════
+        // SHOW AVAILABLE MEAL SLOTS
+        // ═══════════════════════════════════════
         case STATES.CYBER_SLOTS: {
             try {
                 const result = await api.getMealSlots();
@@ -23,12 +36,13 @@ export async function handleCyber(jid, text, send) {
                 const openSlots = slots.filter(s => s.is_open);
 
                 if (openSlots.length === 0) {
-                    await send(
-                        `⚠️ *Hakuna muda wa mlo ulio wazi sasa hivi.*\n\n` +
-                        `Muda wa mlo:\n` +
-                        slots.map(s => `  ${s.is_open ? '🟢' : '🔴'} ${s.display_name} — ${s.delivery_time}`).join('\n') +
-                        `\n\nAndika *0* kurudi kwenye Menu Kuu.`
-                    );
+                    let msg = `😔 *Hakuna muda wa mlo ulio wazi sasa.*\n\n`;
+                    msg += `🕐 _Muda wa mlo uliopo:_\n`;
+                    slots.forEach(s => {
+                        msg += `  ${s.is_open ? '🟢' : '🔴'} *${s.display_name}* — ${s.delivery_time}\n`;
+                    });
+                    msg += `\n👇 _Tuma *0* kurudi Menu Kuu_`;
+                    await send(msg);
                     setState(jid, STATES.MAIN_MENU);
                     return true;
                 }
@@ -39,16 +53,18 @@ export async function handleCyber(jid, text, send) {
 
             } catch (err) {
                 console.error('getMealSlots error:', err.message);
-                await send('⚠️ Imeshindwa kupata muda wa mlo. Jaribu tena.');
+                await send('⚠️ Imeshindwa kupata muda wa mlo. Jaribu tena.\n\n👇 _Tuma *0* kurudi._');
                 setState(jid, STATES.MAIN_MENU);
                 return true;
             }
         }
 
-        // ─── User selected a meal slot, show menu ───
+        // ═══════════════════════════════════════
+        // USER SELECTED SLOT → SHOW MENU
+        // ═══════════════════════════════════════
         case STATES.CYBER_MENU: {
-            // Handle back
             if (text === '0') {
+                clearTemp(jid);
                 setState(jid, STATES.MAIN_MENU);
                 await send(mainMenuMessage(session.userName));
                 return true;
@@ -56,11 +72,11 @@ export async function handleCyber(jid, text, send) {
 
             const { slots, selectedSlot, menuItems } = session.temp;
 
-            // If we already have menu items, user is selecting a food item
+            // If menu items loaded, user is picking a food item
             if (menuItems && menuItems.length > 0) {
                 const itemIdx = parseInt(text) - 1;
                 if (isNaN(itemIdx) || itemIdx < 0 || itemIdx >= menuItems.length) {
-                    await send(`⚠️ Chaguo si sahihi. Andika namba kati ya 1-${menuItems.length} au *0* kurudi.`);
+                    await send(`⚠️ Tafadhali tuma namba kati ya 1-${menuItems.length} au *0* kurudi.`);
                     return true;
                 }
 
@@ -72,8 +88,8 @@ export async function handleCyber(jid, text, send) {
                 });
 
                 await send(
-                    `🍽️ *${selectedItem.name}* — ${formatCurrency(selectedItem.price)}\n\n` +
-                    `Unataka ngapi? Andika idadi (mfano *1* au *2*):`
+                    `🍽️ *${selectedItem.name}* — *${formatCurrency(selectedItem.price)}*\n\n` +
+                    `✍️ _Unataka ngapi? Tuma idadi (mfano *1* au *2*):_`
                 );
                 return true;
             }
@@ -82,7 +98,7 @@ export async function handleCyber(jid, text, send) {
             if (slots && slots.length > 0) {
                 const slotIdx = parseInt(text) - 1;
                 if (isNaN(slotIdx) || slotIdx < 0 || slotIdx >= slots.length) {
-                    await send(`⚠️ Chaguo si sahihi. Andika namba kati ya 1-${slots.length}.`);
+                    await send(`⚠️ Tafadhali tuma namba kati ya 1-${slots.length} au *0* kurudi.`);
                     return true;
                 }
 
@@ -92,7 +108,7 @@ export async function handleCyber(jid, text, send) {
                     const items = result.data || [];
 
                     if (items.length === 0) {
-                        await send(`⚠️ Hakuna vyakula kwa *${slot.display_name}* kwa sasa.\nAndika namba nyingine au *0* kurudi.`);
+                        await send(`😔 Hakuna vyakula kwa *${slot.display_name}* kwa sasa.\n\n👇 _Tuma namba nyingine au *0* kurudi._`);
                         return true;
                     }
 
@@ -115,11 +131,13 @@ export async function handleCyber(jid, text, send) {
             return false;
         }
 
-        // ─── User entering quantity ───
+        // ═══════════════════════════════════════
+        // ENTER QUANTITY
+        // ═══════════════════════════════════════
         case STATES.CYBER_QUANTITY: {
             const qty = parseInt(text);
             if (isNaN(qty) || qty < 1 || qty > 20) {
-                await send('⚠️ Andika idadi sahihi (1-20):');
+                await send('⚠️ Tuma idadi sahihi (1-20):');
                 return true;
             }
 
@@ -134,27 +152,19 @@ export async function handleCyber(jid, text, send) {
 
             const cartTotal = cart.reduce((sum, c) => sum + c.total, 0);
 
-            let cartMsg = `🛒 *Kikapu Chako:*\n`;
-            cart.forEach((c, i) => {
-                cartMsg += `  ${i + 1}. ${c.name} x${c.quantity} = ${formatCurrency(c.total)}\n`;
-            });
-            cartMsg += `\n💰 *Jumla: ${formatCurrency(cartTotal)}*\n\n`;
-            cartMsg += `1️⃣  *Ongeza chakula kingine*\n`;
-            cartMsg += `2️⃣  *Thibitisha na Agiza*\n`;
-            cartMsg += `0️⃣  *Ghairi na rudi Menu Kuu*\n\n`;
-            cartMsg += `Andika *1*, *2*, au *0*.`;
-
             setState(jid, STATES.CYBER_CONFIRM, {
                 ...session.temp,
                 cart,
                 cartTotal,
             });
 
-            await send(cartMsg);
+            await send(formatCart(cart, cartTotal));
             return true;
         }
 
-        // ─── Confirm order or add more ───
+        // ═══════════════════════════════════════
+        // CONFIRM ORDER OR ADD MORE
+        // ═══════════════════════════════════════
         case STATES.CYBER_CONFIRM: {
             if (text === '0') {
                 clearTemp(jid);
@@ -164,7 +174,7 @@ export async function handleCyber(jid, text, send) {
             }
 
             if (text === '1') {
-                // Go back to menu to add more
+                // Back to menu to add more
                 setState(jid, STATES.CYBER_MENU, session.temp);
                 await send(formatMenuItems(session.temp.menuItems, session.temp.selectedSlot?.display_name));
                 return true;
@@ -195,32 +205,34 @@ export async function handleCyber(jid, text, send) {
                         await send(formatOrderConfirmation(result.data, 'cyber'));
                         return true;
                     } else {
-                        await send(`⚠️ ${result.message || 'Imeshindwa kuunda order.'}`);
+                        await send(`⚠️ ${result.message || 'Imeshindwa kuunda order.'}\n\nTuma *0* kurudi.`);
                         return true;
                     }
                 } catch (err) {
                     const errMsg = err.response?.data?.message || err.message;
                     console.error('createCyberOrder error:', errMsg);
                     await send(
-                        `⚠️ *Imeshindwa kuunda order:*\n${errMsg}\n\n` +
-                        `1️⃣  *Jaribu tena*\n` +
-                        `0️⃣  *Rudi Menu Kuu*\n\n` +
-                        `Andika *2* kujaribu tena au *0* kurudi.`
+                        `⚠️ *Imeshindwa:* ${errMsg}\n\n` +
+                        `Tuma *2* kujaribu tena au *0* kurudi.`
                     );
                     return true;
                 }
             }
 
-            await send('⚠️ Andika *1* (ongeza), *2* (agiza), au *0* (ghairi).');
+            await send('👇 Tuma *1* (ongeza), *2* (agiza), au *0* (ghairi).');
             return true;
         }
 
-        // ─── Payment method selection ───
+        // ═══════════════════════════════════════
+        // PAYMENT METHOD SELECTION
+        // ═══════════════════════════════════════
         case STATES.CYBER_PAYMENT_METHOD: {
             return handlePaymentMethod(jid, text, send, session, 'CYBER');
         }
 
-        // ─── Payment pending / polling ───
+        // ═══════════════════════════════════════
+        // PAYMENT PENDING / POLLING
+        // ═══════════════════════════════════════
         case STATES.CYBER_PAYMENT_PENDING: {
             if (text === '0' || text.toLowerCase() === 'menu') {
                 clearTemp(jid);
@@ -228,7 +240,74 @@ export async function handleCyber(jid, text, send) {
                 await send(mainMenuMessage(session.userName));
                 return true;
             }
-            await send('⏳ Bado tunasubiri malipo yako. Utapokea ujumbe malipo yakipokelewa.\n\nAndika *0* kurudi Menu Kuu.');
+
+            // Check if user wants to track their order
+            if (text.toLowerCase() === 'track' || text === '1') {
+                const { orderId } = session.temp;
+                if (orderId) {
+                    try {
+                        const result = await api.getCyberOrder(orderId);
+                        if (result.success) {
+                            const o = result.data;
+                            let msg = `📋 *ORDER ${o.order_number}*\n━━━━━━━━━━━━━━━━━━━━\n\n`;
+                            msg += `${statusEmoji(o.status)} *Status: ${statusLabel(o.status)}*\n`;
+                            msg += `💰 Jumla: ${formatCurrency(o.total_amount)}\n\n`;
+                            if (o.items && o.items.length > 0) {
+                                msg += `🧾 *Vitu:*\n`;
+                                o.items.forEach(item => {
+                                    msg += `   🔸 ${item.name} ×${item.quantity} — ${formatCurrency(item.price)}\n`;
+                                });
+                            }
+                            msg += `\n👇 _Tuma *0* kurudi Menu Kuu_`;
+                            await send(msg);
+                            return true;
+                        }
+                    } catch (err) {
+                        // ignore, show default
+                    }
+                }
+            }
+
+            await send(
+                '⏳ _Bado tunasubiri malipo yako._\n\n' +
+                '1️⃣ *Angalia order status*\n' +
+                '0️⃣ *Rudi Menu Kuu*'
+            );
+            return true;
+        }
+
+        // ═══════════════════════════════════════
+        // ORDER TRACKING
+        // ═══════════════════════════════════════
+        case STATES.CYBER_TRACK: {
+            if (text === '0') {
+                clearTemp(jid);
+                setState(jid, STATES.MAIN_MENU);
+                await send(mainMenuMessage(session.userName));
+                return true;
+            }
+
+            const { trackOrderId } = session.temp;
+            if (trackOrderId) {
+                try {
+                    const result = await api.getCyberOrder(trackOrderId);
+                    if (result.success) {
+                        const o = result.data;
+                        const progress = getOrderProgress(o.status);
+                        let msg = `📋 *ORDER ${o.order_number}*\n━━━━━━━━━━━━━━━━━━━━\n\n`;
+                        msg += `${progress}\n\n`;
+                        msg += `${statusEmoji(o.status)} *${statusLabel(o.status)}*\n`;
+                        msg += `💰 ${formatCurrency(o.total_amount)}\n\n`;
+                        msg += `👇 _Tuma *0* kurudi Menu Kuu_`;
+                        await send(msg);
+                        return true;
+                    }
+                } catch (err) {
+                    console.error('track error:', err.message);
+                }
+            }
+
+            await send('⚠️ Imeshindwa kupata order.\n\n👇 _Tuma *0* kurudi._');
             return true;
         }
     }
@@ -236,11 +315,12 @@ export async function handleCyber(jid, text, send) {
     return false;
 }
 
-/**
- * Shared payment method handler
- */
+
+// ═══════════════════════════════════════
+// SHARED PAYMENT METHOD HANDLER
+// ═══════════════════════════════════════
+
 export async function handlePaymentMethod(jid, text, send, session, prefix) {
-    // Handle back to main menu
     if (text === '0') {
         clearTemp(jid);
         setState(jid, STATES.MAIN_MENU);
@@ -252,14 +332,7 @@ export async function handlePaymentMethod(jid, text, send, session, prefix) {
     const method = methods[text];
 
     if (!method) {
-        await send(
-            `⚠️ Chagua njia ya malipo:\n\n` +
-            `1️⃣  *M-Pesa*\n` +
-            `2️⃣  *Tigo Pesa*\n` +
-            `3️⃣  *Airtel Money*\n` +
-            `0️⃣  *Rudi Menu Kuu*\n\n` +
-            `Andika *1*, *2*, *3*, au *0*.`
-        );
+        await send(paymentMethodMessage());
         return true;
     }
 
@@ -270,7 +343,7 @@ export async function handlePaymentMethod(jid, text, send, session, prefix) {
         await send(
             `⚠️ Namba ya simu haipo kwenye akaunti yako.\n` +
             `Tafadhali wasiliana nasi kwa msaada.\n\n` +
-            `Andika *0* kurudi Menu Kuu.`
+            `👇 _Tuma *0* kurudi Menu Kuu_`
         );
         return true;
     }
@@ -291,24 +364,15 @@ export async function handlePaymentMethod(jid, text, send, session, prefix) {
                 paymentId: result.payment_id,
             });
 
-            await send(
-                `⏳ *Inasubiri Malipo...*\n\n` +
-                `📱 STK Push imetumwa kwenye: *${phone}*\n` +
-                `💰 Kiasi: *${formatCurrency(totalAmount)}*\n` +
-                `📲 Njia: *${method.toUpperCase()}*\n\n` +
-                `Tafadhali weka PIN yako kulipa.\n` +
-                `Tutakutumia ujumbe malipo yakipokelewa. ✅`
-            );
+            await send(paymentPendingMessage(phone, totalAmount, method));
 
-            // Start polling for payment status
+            // Start polling
             pollPaymentStatus(jid, result.payment_id, send, session);
             return true;
-
         } else {
             await send(
                 `⚠️ ${result.message || 'Imeshindwa kuanzisha malipo.'}\n\n` +
-                `1️⃣  *M-Pesa*\n2️⃣  *Tigo Pesa*\n3️⃣  *Airtel Money*\n0️⃣  *Rudi Menu Kuu*\n\n` +
-                `Jaribu tena au andika *0* kurudi.`
+                paymentMethodMessage()
             );
             return true;
         }
@@ -316,34 +380,26 @@ export async function handlePaymentMethod(jid, text, send, session, prefix) {
         const errMsg = err.response?.data?.message || err.message;
         console.error('initiatePayment error:', errMsg);
 
-        // Detect specific errors and give friendly messages
         const isGatewayError = errMsg.toLowerCase().includes('not configured') ||
                                errMsg.toLowerCase().includes('gateway');
 
         if (isGatewayError) {
-            await send(
-                `⚠️ *Mfumo wa Malipo Haujaandaliwa Bado*\n\n` +
-                `Samahani, huduma ya malipo ya mobile money bado haijawezeshwa.\n` +
-                `Agizo lako limehifadhiwa — unaweza kulipa baadaye.\n\n` +
-                `📞 Wasiliana nasi kwa msaada: +255 XXX XXX XXX\n\n` +
-                `0️⃣  *Rudi Menu Kuu*\n\n` +
-                `Andika *0* kurudi.`
-            );
+            await send(paymentGatewayError());
         } else {
             await send(
-                `⚠️ *Malipo Yameshindwa*\n\n` +
-                `Sababu: ${errMsg}\n\n` +
-                `1️⃣  *M-Pesa*\n2️⃣  *Tigo Pesa*\n3️⃣  *Airtel Money*\n0️⃣  *Rudi Menu Kuu*\n\n` +
-                `Jaribu tena au andika *0* kurudi.`
+                `⚠️ *Malipo Yameshindwa:* ${errMsg}\n\n` +
+                paymentMethodMessage()
             );
         }
         return true;
     }
 }
 
-/**
- * Poll payment status in background
- */
+
+// ═══════════════════════════════════════
+// PAYMENT POLLING
+// ═══════════════════════════════════════
+
 async function pollPaymentStatus(jid, paymentId, send, session) {
     let attempts = 0;
     const maxAttempts = 18; // 3 minutes
@@ -355,40 +411,73 @@ async function pollPaymentStatus(jid, paymentId, send, session) {
 
             if (result.status === 'paid') {
                 clearInterval(interval);
-                clearTemp(jid);
-                setState(jid, STATES.MAIN_MENU);
-
-                await send(
-                    `✅ *Malipo Yamepokelewa!*\n\n` +
-                    `💰 Kiasi: *${formatCurrency(result.amount)}*\n\n` +
-                    `Asante kwa kutumia Monana! Agizo lako linaandaliwa. 🎉\n\n` +
-                    `Andika *menu* kurudi kwenye Menu Kuu.`
-                );
+                
+                // Only reset state/send success if user hasn't started a new fresh order
+                const currentSession = getSession(jid);
+                if (currentSession.state === STATES.CYBER_PAYMENT_PENDING || 
+                    currentSession.state === STATES.MARKET_PAYMENT_PENDING ||
+                    currentSession.state === STATES.CYBER_TRACK || 
+                    currentSession.state === STATES.MAIN_MENU) {
+                    
+                    clearTemp(jid);
+                    setState(jid, STATES.MAIN_MENU);
+                    await send(paymentSuccessMessage(
+                        result.amount,
+                        session.temp?.orderNumber
+                    ));
+                }
                 return;
             }
 
             if (result.status === 'failed' || result.status === 'cancelled') {
                 clearInterval(interval);
-                await send(
-                    `❌ *Malipo Yameshindwa*\n\n` +
-                    `Malipo yako hayakukamilika. Tafadhali jaribu tena.\n\n` +
-                    `1️⃣  *M-Pesa*\n2️⃣  *Tigo Pesa*\n3️⃣  *Airtel Money*\n0️⃣  *Rudi Menu Kuu*`
-                );
+                const currentSession = getSession(jid);
+                if (currentSession.state === STATES.CYBER_PAYMENT_PENDING || currentSession.state === STATES.MARKET_PAYMENT_PENDING) {
+                    await send(paymentFailedMessage());
+                }
                 return;
             }
 
-            // Still pending
             if (attempts >= maxAttempts) {
                 clearInterval(interval);
-                await send(
-                    `⏰ *Muda wa kusubiri umekwisha.*\n\n` +
-                    `Kama umelipa, tafadhali subiri dakika chache. ` +
-                    `Tutakutumia ujumbe malipo yakipokelewa.\n\n` +
-                    `Andika *menu* kurudi kwenye Menu Kuu.`
-                );
+                const currentSession = getSession(jid);
+                if (currentSession.state === STATES.CYBER_PAYMENT_PENDING || currentSession.state === STATES.MARKET_PAYMENT_PENDING) {
+                    await send(paymentTimeoutMessage());
+                }
             }
         } catch (err) {
             // Silently continue polling
         }
-    }, 10000); // Check every 10 seconds
+    }, 10000);
+}
+
+
+// ═══════════════════════════════════════
+// ORDER PROGRESS VISUAL
+// ═══════════════════════════════════════
+
+function getOrderProgress(status) {
+    const steps = [
+        { key: 'pending', label: 'Imepokelewa', icon: '📋' },
+        { key: 'approved', label: 'Imekubaliwa', icon: '✅' },
+        { key: 'preparing', label: 'Inaandaliwa', icon: '🧑‍🍳' },
+        { key: 'ready', label: 'Iko Tayari', icon: '🍽️' },
+        { key: 'on_delivery', label: 'Njiani', icon: '🚴' },
+        { key: 'delivered', label: 'Imefika', icon: '📬' },
+    ];
+
+    const currentIdx = steps.findIndex(s => s.key === status);
+    let progress = '📍 *Hatua ya Order:*\n';
+
+    steps.forEach((step, i) => {
+        if (i < currentIdx) {
+            progress += `  ✅ ~~${step.label}~~\n`;
+        } else if (i === currentIdx) {
+            progress += `  ${step.icon} *${step.label}* ◄── _Sasa hivi_\n`;
+        } else {
+            progress += `  ⬜ ${step.label}\n`;
+        }
+    });
+
+    return progress;
 }

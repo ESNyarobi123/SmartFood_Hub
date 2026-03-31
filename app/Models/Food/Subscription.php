@@ -28,6 +28,7 @@ class Subscription extends Model
         'source',
         'paused_at',
         'resumed_at',
+        'expired_at',
     ];
 
     protected function casts(): array
@@ -39,6 +40,7 @@ class Subscription extends Model
             'delivery_lng' => 'decimal:8',
             'paused_at' => 'datetime',
             'resumed_at' => 'datetime',
+            'expired_at' => 'datetime',
         ];
     }
 

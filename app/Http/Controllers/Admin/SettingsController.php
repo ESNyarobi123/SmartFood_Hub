@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class SettingsController extends Controller
 {
@@ -13,8 +14,16 @@ class SettingsController extends Controller
         $zenoPayApiKey = Setting::get('zenopay_api_key', '');
         $whatsappNumber = Setting::get('whatsapp_number', '');
         $botSuperToken = Setting::get('bot_super_token', '');
+        $dailyOpsToken = Setting::get('daily_ops_token', '');
 
-        return view('admin.settings.index', compact('zenoPayApiKey', 'whatsappNumber', 'botSuperToken'));
+        $dailyOpsUrl = $dailyOpsToken
+            ? url('/ops/' . $dailyOpsToken)
+            : null;
+
+        return view('admin.settings.index', compact(
+            'zenoPayApiKey', 'whatsappNumber', 'botSuperToken',
+            'dailyOpsToken', 'dailyOpsUrl'
+        ));
     }
 
     public function update(Request $request): \Illuminate\Http\RedirectResponse
@@ -31,5 +40,22 @@ class SettingsController extends Controller
 
         return redirect()->route('admin.settings.index')
             ->with('success', 'Settings updated successfully!');
+    }
+
+    public function generateOpsLink(): \Illuminate\Http\RedirectResponse
+    {
+        $token = Str::random(48);
+        Setting::set('daily_ops_token', $token, 'Token for daily operations shareable link');
+
+        return redirect()->route('admin.settings.index')
+            ->with('success', 'Daily Operations link generated successfully!');
+    }
+
+    public function revokeOpsLink(): \Illuminate\Http\RedirectResponse
+    {
+        Setting::set('daily_ops_token', '', 'Token for daily operations shareable link');
+
+        return redirect()->route('admin.settings.index')
+            ->with('success', 'Daily Operations link revoked.');
     }
 }

@@ -93,4 +93,70 @@ class SubscriptionController extends Controller
             ->back()
             ->with('success', 'Subscription cancelled successfully.');
     }
+
+    public function updateStatus(Request $request, Subscription $subscription): RedirectResponse
+    {
+        $request->validate([
+            'status' => 'required|in:pending,active,paused,cancelled,expired',
+        ]);
+
+        $newStatus = $request->status;
+        $oldStatus = $subscription->status;
+
+        if ($newStatus === $oldStatus) {
+            return redirect()->back()->with('info', 'Status is already ' . $oldStatus . '.');
+        }
+
+        // Define allowed transitions
+        $allowedTransitions = [
+            'pending'   => ['active', 'cancelled'],
+            'active'    => ['paused', 'cancelled', 'expired'],
+            'paused'    => ['active', 'cancelled', 'expired'],
+            'cancelled' => ['active'], // admin can reactivate
+            'expired'   => ['active'], // admin can reactivate
+        ];
+
+        if (! in_array($newStatus, $allowedTransitions[$oldStatus] ?? [])) {
+            return redirect()
+                ->back()
+                ->with('error', "Cannot change status from '{$oldStatus}' to '{$newStatus}'.");
+        }
+
+        // Build update data with appropriate timestamps
+        $updateData = ['status' => $newStatus];
+
+        switch ($newStatus) {
+            case 'paused':
+                $updateData['paused_at'] = now();
+                break;
+
+            case 'active':
+                if ($oldStatus === 'paused') {
+                    $updateData['resumed_at'] = now();
+                }
+                // Reactivating from expired/cancelled — clear expired_at
+                if (in_array($oldStatus, ['expired', 'cancelled'])) {
+                    $updateData['expired_at'] = null;
+                }
+                break;
+
+            case 'expired':
+                $updateData['expired_at'] = now();
+                break;
+        }
+
+        $subscription->update($updateData);
+
+        $statusLabels = [
+            'pending' => 'Pending',
+            'active' => 'Active',
+            'paused' => 'Paused',
+            'cancelled' => 'Cancelled',
+            'expired' => 'Expired',
+        ];
+
+        return redirect()
+            ->back()
+            ->with('success', 'Subscription status updated to ' . ($statusLabels[$newStatus] ?? $newStatus) . '.');
+    }
 }

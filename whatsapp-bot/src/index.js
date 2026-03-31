@@ -107,7 +107,7 @@ async function startBot() {
                 await handleMessage(jid, text, send);
             } catch (err) {
                 console.error(`  ❌ Handler error for ${jid}:`, err.message);
-                await send('⚠️ Samahani, kuna tatizo la mfumo. Tafadhali jaribu tena baadaye.\n\nAndika *menu* kuanza upya.');
+                await send('⚠️ Samahani, kuna tatizo la mfumo. Tafadhali jaribu tena baadaye.\n\nTuma *menu* kuanza upya.');
             }
         }
     });

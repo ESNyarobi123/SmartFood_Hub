@@ -3,7 +3,7 @@ import { STATES, setState, getSession, clearTemp } from '../state.js';
 import { formatUserStatus, mainMenuMessage } from '../utils/formatter.js';
 
 /**
- * Handle Account Status flow
+ * Handle Account Status flow — Rich account overview
  */
 export async function handleAccount(jid, text, send) {
     const session = getSession(jid);
@@ -21,7 +21,7 @@ export async function handleAccount(jid, text, send) {
     if (!session.userId) {
         await send(
             `⚠️ Hatujakutambua. Tafadhali anza upya.\n\n` +
-            `Andika *hi* kuanza upya.`
+            `👇 _Tuma *hi* kuanza upya._`
         );
         setState(jid, STATES.NEW_USER);
         return true;
@@ -36,16 +36,16 @@ export async function handleAccount(jid, text, send) {
         } else {
             await send(
                 `⚠️ Imeshindwa kupata taarifa zako.\n\n` +
-                `0️⃣  *Rudi Menu Kuu*\n\n` +
-                `Andika *0* kurudi.`
+                `0️⃣  🔙 _Rudi Menu Kuu_\n\n` +
+                `👇 _Tuma *0* kurudi._`
             );
         }
     } catch (err) {
         console.error('getUserStatus error:', err.response?.data?.message || err.message);
         await send(
             `⚠️ Kuna tatizo la mfumo. Jaribu tena baadaye.\n\n` +
-            `0️⃣  *Rudi Menu Kuu*\n\n` +
-            `Andika *0* kurudi.`
+            `0️⃣  🔙 _Rudi Menu Kuu_\n\n` +
+            `👇 _Tuma *0* kurudi._`
         );
     }
 

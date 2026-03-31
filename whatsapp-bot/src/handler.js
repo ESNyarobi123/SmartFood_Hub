@@ -28,7 +28,7 @@ export async function handleMessage(jid, rawText, send) {
 
     if (lower === 'reset' || lower === 'logout') {
         resetSession(jid);
-        await send('🔄 Session imefutwa. Andika *hi* kuanza upya.');
+        await send('🔄 Session imefutwa. Tuma *hi* kuanza upya.');
         return;
     }
 
@@ -49,7 +49,7 @@ export async function handleMessage(jid, rawText, send) {
                 return;
 
             case '2':
-                // Monana Market → show market sub-menu
+                // Monana Market → show smart market menu
                 setState(jid, STATES.MARKET_MENU);
                 await handleMarket(jid, '', send);
                 return;
@@ -61,12 +61,10 @@ export async function handleMessage(jid, rawText, send) {
                 return;
 
             default:
-                // If user just arrived and hasn't seen the menu yet
                 if (!text || !['1', '2', '3'].includes(text)) {
                     if (session.userId) {
                         await send(mainMenuMessage(session.userName));
                     } else {
-                        // Trigger onboarding
                         setState(jid, STATES.NEW_USER);
                         await handleOnboarding(jid, text, send);
                     }
@@ -79,6 +77,7 @@ export async function handleMessage(jid, rawText, send) {
     const cyberStates = [
         STATES.CYBER_SLOTS, STATES.CYBER_MENU, STATES.CYBER_QUANTITY,
         STATES.CYBER_CONFIRM, STATES.CYBER_PAYMENT_METHOD, STATES.CYBER_PAYMENT_PENDING,
+        STATES.CYBER_TRACK,
     ];
     if (cyberStates.includes(session.state)) {
         const handled = await handleCyber(jid, text, send);
@@ -89,6 +88,10 @@ export async function handleMessage(jid, rawText, send) {
     const marketStates = [
         STATES.MARKET_MENU, STATES.MARKET_PACKAGES, STATES.MARKET_PACKAGE_DETAIL,
         STATES.MARKET_CONFIRM_SUB, STATES.MARKET_PAYMENT_METHOD, STATES.MARKET_PAYMENT_PENDING,
+        STATES.MARKET_MY_SUB, STATES.MARKET_SUB_MANAGE,
+        STATES.MARKET_CUSTOMIZE, STATES.MARKET_CUSTOMIZE_ITEM, STATES.MARKET_CUSTOMIZE_SWAP,
+        STATES.MARKET_SOKONI, STATES.MARKET_SOKONI_QTY, STATES.MARKET_SOKONI_CART,
+        STATES.MARKET_SOKONI_PAYMENT, STATES.MARKET_SOKONI_PENDING,
     ];
     if (marketStates.includes(session.state)) {
         const handled = await handleMarket(jid, text, send);
@@ -104,13 +107,12 @@ export async function handleMessage(jid, rawText, send) {
     // ─── Fallback — unknown state or command ───
     if (session.userId) {
         await send(
-            `🤔 Sijaelewa. Jaribu:\n\n` +
-            `▪️ Andika *menu* kuona Menu Kuu\n` +
-            `▪️ Andika *1*, *2*, au *3* kuchagua huduma\n` +
-            `▪️ Andika *0* kurudi nyuma`
+            `🤔 _Samahani, sijaelewa jibu lako._\n\n` +
+            `👇 Tuma *menu* kuona Menu Kuu\n` +
+            `👇 Tuma *1*, *2*, au *3* kuchagua huduma\n` +
+            `👇 Tuma *0* kurudi nyuma`
         );
     } else {
-        // Not authenticated at all
         setState(jid, STATES.NEW_USER);
         await handleOnboarding(jid, text, send);
     }

@@ -73,7 +73,7 @@ export async function handleOnboarding(jid, text, send) {
                     `Naona ni mara yako ya kwanza hapa.\n\n` +
                     `1️⃣  *Jisajili* (Unda akaunti mpya)\n` +
                     `2️⃣  *Tayari nina akaunti* (Ingia kwa namba ya simu)\n\n` +
-                    `Andika *1* au *2*:`
+                    `> 👇 _Tuma *1* au *2* kujibu_`
                 );
                 return true;
 
@@ -81,7 +81,7 @@ export async function handleOnboarding(jid, text, send) {
                 console.error('resolveUser error:', err.message);
                 await send(
                     `⚠️ Samahani, kuna tatizo la mfumo. Tafadhali jaribu tena.\n\n` +
-                    `Andika *hi* kuanza upya.`
+                    `Tuma *hi* kuanza upya.`
                 );
                 return true;
             }
@@ -92,7 +92,7 @@ export async function handleOnboarding(jid, text, send) {
             if (text === '2') {
                 setState(jid, STATES.AWAITING_IDENTIFY);
                 await send(
-                    `📱 Andika *namba yako ya simu* uliyosajili nayo:\n` +
+                    `📱 Tuma *namba yako ya simu* uliyosajili nayo:\n` +
                     `_Mfano: 0712345678_`
                 );
                 return true;
@@ -100,15 +100,15 @@ export async function handleOnboarding(jid, text, send) {
 
             // If user typed "1", ask for name
             if (text === '1') {
-                await send(`📝 Tafadhali andika *jina lako kamili*:`);
+                await send(`📝 Tafadhali tuma *jina lako kamili*:`);
                 return true;
             }
 
             // User is typing their name
             if (!text || text.trim().length < 2) {
                 await send(
-                    `⚠️ Tafadhali andika jina lako kamili (angalau herufi 2):\n\n` +
-                    `Au andika *2* kama tayari una akaunti.`
+                    `⚠️ Tafadhali Tuma jina lako kamili (angalau herufi 2):\n\n` +
+                    `Au tuma *2* kama tayari una akaunti.`
                 );
                 return true;
             }
@@ -117,7 +117,7 @@ export async function handleOnboarding(jid, text, send) {
             setState(jid, STATES.AWAITING_PHONE, { name });
             await send(
                 `Asante *${name}*! 🎉\n\n` +
-                `� Sasa andika *namba yako ya simu* (ya Tanzania):\n` +
+                `📱 Sasa tuma *namba yako ya simu* (ya Tanzania):\n` +
                 `_Mfano: 0712345678 au 0678123456_`
             );
             return true;
@@ -127,15 +127,15 @@ export async function handleOnboarding(jid, text, send) {
             // Back button first
             if (text.trim() === '0') {
                 setState(jid, STATES.AWAITING_NAME);
-                await send(`📝 Andika *jina lako kamili*:`);
+                await send(`📝 Tuma *jina lako kamili*:`);
                 return true;
             }
 
             if (!text || !isValidTzPhone(text.trim())) {
                 await send(
-                    `⚠️ Namba si sahihi. Tafadhali andika namba ya simu ya Tanzania:\n` +
+                    `⚠️ Namba si sahihi. Tafadhali tuma namba ya simu ya Tanzania:\n` +
                     `_Mfano: 0712345678 au 0678123456_\n\n` +
-                    `Andika *0* kurudi nyuma.`
+                    `Tuma *0* kurudi nyuma.`
                 );
                 return true;
             }
@@ -143,9 +143,9 @@ export async function handleOnboarding(jid, text, send) {
             const phone = formatPhone(text.trim());
             setState(jid, STATES.AWAITING_ADDRESS, { ...session.temp, phone });
             await send(
-                `�� Sasa niambie *eneo ulilopo* kwa delivery.\n` +
+                `📍 Sasa niambie *eneo ulilopo* kwa delivery.\n` +
                 `_Mfano: Kijitonyama, Makumbusho, Sinza_\n\n` +
-                `Andika *0* kurudi nyuma.`
+                `Tuma *0* kurudi nyuma.`
             );
             return true;
         }
@@ -153,15 +153,15 @@ export async function handleOnboarding(jid, text, send) {
         case STATES.AWAITING_ADDRESS: {
             if (text.trim() === '0') {
                 setState(jid, STATES.AWAITING_PHONE, session.temp);
-                await send(`📱 Andika *namba yako ya simu*:\n_Mfano: 0712345678_`);
+                await send(`📱 Tuma *namba yako ya simu*:\n_Mfano: 0712345678_`);
                 return true;
             }
 
             if (!text || text.trim().length < 3) {
                 await send(
-                    `⚠️ Tafadhali andika eneo lako (angalau herufi 3).\n` +
+                    `⚠️ Tafadhali tuma eneo lako (angalau herufi 3).\n` +
                     `_Mfano: Kijitonyama_\n\n` +
-                    `Andika *0* kurudi nyuma.`
+                    `Tuma *0* kurudi nyuma.`
                 );
                 return true;
             }
@@ -191,10 +191,10 @@ export async function handleOnboarding(jid, text, send) {
                         `✅ *Usajili Umekamilika!*\n\n` +
                         `Karibu *${result.name}*! Akaunti yako imeundwa.\n\n` +
                         `🌐 *Kuingia kwenye Website:*\n` +
-                        `📱 Namba: *${webLogin.phone}*\n` +
-                        `🔑 Password: *${webLogin.password}*\n` +
-                        `🔗 monana.co.tz/login\n\n` +
-                        `_Hifadhi taarifa hizi!_`
+                        `> 📱 Namba: *${webLogin.phone}*\n` +
+                        `> 🔑 Password: *${webLogin.password}*\n` +
+                        `> 🔗 monana.co.tz/login\n\n` +
+                        `_Tunza taarifa hizi!_`
                     );
 
                     // Show main menu after short delay
@@ -228,7 +228,7 @@ export async function handleOnboarding(jid, text, send) {
                     `⚠️ Imeshindwa kusajili: ${errMsg}\n\n` +
                     `1️⃣  *Jaribu tena*\n` +
                     `0️⃣  *Rudi mwanzo*\n\n` +
-                    `Andika *1* au *0*.`
+                    `Tuma *1* au *0*.`
                 );
                 // Stay in same state so they can retry
                 return true;
@@ -244,16 +244,16 @@ export async function handleOnboarding(jid, text, send) {
                 await send(
                     `1️⃣  *Jisajili* (Unda akaunti mpya)\n` +
                     `2️⃣  *Tayari nina akaunti*\n\n` +
-                    `Andika *1* au *2*:`
+                    `Tuma *1* au *2*:`
                 );
                 return true;
             }
 
             if (!text || !isValidTzPhone(text.trim())) {
                 await send(
-                    `⚠️ Namba si sahihi. Andika namba ya simu ya Tanzania:\n` +
+                    `⚠️ Namba si sahihi. Tuma namba ya simu ya Tanzania:\n` +
                     `_Mfano: 0712345678_\n\n` +
-                    `Andika *0* kurudi nyuma.`
+                    `Tuma *0* kurudi nyuma.`
                 );
                 return true;
             }
@@ -272,7 +272,7 @@ export async function handleOnboarding(jid, text, send) {
                         userAddress: result.address,
                     });
                     setState(jid, STATES.MAIN_MENU);
-                    await send(`✅ Tumekupata *${result.name}*! Karibu tena! �\n`);
+                    await send(`✅ Tumekupata *${result.name}*! Karibu tena! 🎉\n`);
                     await send(mainMenuMessage(result.name));
                     return true;
                 }
@@ -283,7 +283,7 @@ export async function handleOnboarding(jid, text, send) {
                     `1️⃣  *Jaribu namba nyingine*\n` +
                     `2️⃣  *Jisajili kwa akaunti mpya*\n` +
                     `0️⃣  *Rudi mwanzo*\n\n` +
-                    `Andika *1*, *2*, au *0*.`
+                    `Tuma *1*, *2*, au *0*.`
                 );
 
                 // If they type 2, go to name entry
@@ -294,7 +294,7 @@ export async function handleOnboarding(jid, text, send) {
                 console.error('resolveUser (identify) error:', err.message);
                 await send(
                     `⚠️ Kuna tatizo la mfumo. Jaribu tena.\n\n` +
-                    `Andika namba yako ya simu au *0* kurudi nyuma.`
+                    `Tuma namba yako ya simu au *0* kurudi nyuma.`
                 );
                 return true;
             }

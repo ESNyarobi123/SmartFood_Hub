@@ -3,177 +3,225 @@
 @section('title', 'Settings')
 
 @section('content')
-<div class="mb-8">
-    <h1 class="text-3xl font-bold text-blue-900 dark:text-blue-100">Settings</h1>
-    <p class="text-slate-600 dark:text-slate-400 mt-2">Configure payment gateway and system settings</p>
-</div>
+<div class="space-y-8">
 
-<div class="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6">
-    <h2 class="text-2xl font-semibold text-blue-800 dark:text-blue-200 mb-6">ZenoPay Configuration</h2>
+    {{-- ═══════════════════════════════════════ --}}
+    {{-- PAGE HEADER --}}
+    {{-- ═══════════════════════════════════════ --}}
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-bold bg-clip-text text-transparent" style="background-image: var(--gradient-purple);">
+                ⚙️ Settings
+            </h1>
+            <p class="text-[var(--text-secondary)] mt-1">Manage platform configuration, API keys & operations</p>
+        </div>
+    </div>
 
+    {{-- ═══════════════════════════════════════ --}}
+    {{-- DAILY OPERATIONS LINK --}}
+    {{-- ═══════════════════════════════════════ --}}
+    <div class="card p-6 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-40 h-40 opacity-10" style="background: radial-gradient(circle, var(--accent-cyber) 0%, transparent 70%);"></div>
+        <div class="relative z-10">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center" style="background: linear-gradient(135deg, rgba(0,255,200,0.15), rgba(0,217,245,0.08)); border: 1px solid rgba(0,255,200,0.3);">
+                    <svg class="w-6 h-6 text-[#00ffc8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-white">📊 Daily Operations Link</h2>
+                    <p class="text-sm text-[var(--text-secondary)]">Generate a shareable link to view all today's orders, packages & delivery status</p>
+                </div>
+            </div>
+
+            @if($dailyOpsUrl)
+                <div class="rounded-xl p-4 mb-4" style="background: rgba(0,255,200,0.05); border: 1px solid rgba(0,255,200,0.15);">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-2.5 h-2.5 rounded-full bg-[#00ffc8] status-dot"></div>
+                        <span class="text-sm font-semibold text-[#00ffc8]">Link Active</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <input type="text" id="opsUrl" value="{{ $dailyOpsUrl }}" readonly
+                               class="flex-1 px-4 py-2.5 rounded-lg text-sm font-mono text-white/90" 
+                               style="background: rgba(0,0,0,0.3) !important; border: 1px solid rgba(0,255,200,0.2) !important;">
+                        <button onclick="copyOpsLink()" id="copyBtn" 
+                                class="px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 hover:scale-105"
+                                style="background: linear-gradient(135deg, #00ffc8, #00d9f5); color: #0a0a0f;">
+                            📋 Copy
+                        </button>
+                        <a href="{{ $dailyOpsUrl }}" target="_blank" 
+                           class="px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 hover:scale-105"
+                           style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                            🔗 Open
+                        </a>
+                    </div>
+                </div>
+                <form action="{{ route('admin.settings.revoke-ops-link') }}" method="POST" class="inline">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 hover:scale-105"
+                            style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #ef4444;"
+                            onclick="return confirm('Revoke this link? Anyone with it will lose access.')">
+                        🗑️ Revoke Link
+                    </button>
+                </form>
+            @else
+                <div class="rounded-xl p-4 mb-4" style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1);">
+                    <p class="text-sm text-[var(--text-muted)] mb-1">No active link. Generate one to share with your team.</p>
+                    <p class="text-xs text-[var(--text-muted)]">The link shows real-time daily orders, subscriptions, customizations & delivery status.</p>
+                </div>
+                <form action="{{ route('admin.settings.generate-ops-link') }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit" class="btn-primary px-6 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-300">
+                        🔗 Generate Operations Link
+                    </button>
+                </form>
+            @endif
+        </div>
+    </div>
+
+    {{-- ═══════════════════════════════════════ --}}
+    {{-- SETTINGS FORM --}}
+    {{-- ═══════════════════════════════════════ --}}
     <form action="{{ route('admin.settings.update') }}" method="POST">
         @csrf
 
-        <div class="mb-6">
-            <label for="zenopay_api_key" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                ZenoPay API Key <span class="text-red-500">*</span>
-            </label>
-            <input 
-                type="password" 
-                name="zenopay_api_key" 
-                id="zenopay_api_key" 
-                value="{{ old('zenopay_api_key', $zenoPayApiKey) }}" 
-                required
-                class="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter your ZenoPay API key"
-            >
-            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                Get your API key from <a href="https://zenoapi.com" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline">ZenoPay Dashboard</a>
-            </p>
-            @error('zenopay_api_key')
-                <p class="text-red-600 dark:text-red-400 text-sm mt-1">{{ $message }}</p>
-            @enderror
-        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        <div class="mb-6">
-            <label for="whatsapp_number" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                WhatsApp Number
-            </label>
-            <input 
-                type="text" 
-                name="whatsapp_number" 
-                id="whatsapp_number" 
-                value="{{ old('whatsapp_number', $whatsappNumber) }}" 
-                class="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="e.g., 255712345678"
-            >
-            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                Enter WhatsApp number with country code (e.g., 255712345678). This will be used for the WhatsApp chat button on the website.
-            </p>
-            @error('whatsapp_number')
-                <p class="text-red-600 dark:text-red-400 text-sm mt-1">{{ $message }}</p>
-            @enderror
-        </div>
+            {{-- Payment Gateway --}}
+            <div class="card p-6 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 opacity-10" style="background: radial-gradient(circle, var(--accent-food) 0%, transparent 70%);"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: linear-gradient(135deg, rgba(255,123,84,0.15), rgba(254,225,64,0.08)); border: 1px solid rgba(255,123,84,0.3);">
+                            <svg class="w-5 h-5 text-[#ff7b54]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-white">💳 Payment Gateway</h3>
+                            <p class="text-xs text-[var(--text-secondary)]">ZenoPay mobile money integration</p>
+                        </div>
+                    </div>
 
-        <div class="mb-6">
-            <label for="bot_super_token" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Bot Super Token
-            </label>
-            <div class="flex gap-2">
-                <input 
-                    type="password" 
-                    name="bot_super_token" 
-                    id="bot_super_token" 
-                    value="{{ old('bot_super_token', $botSuperToken) }}" 
-                    class="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter bot super token for WhatsApp bot API"
-                >
-                <button 
-                    type="button" 
-                    id="generate-token-btn"
-                    onclick="generateBotToken()"
-                    class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors duration-200 whitespace-nowrap"
-                    title="Generate a new secure token"
-                >
-                    Generate Token
-                </button>
-                <button 
-                    type="button" 
-                    id="toggle-token-visibility"
-                    onclick="toggleTokenVisibility()"
-                    class="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-md font-medium transition-colors duration-200"
-                    title="Show/Hide token"
-                >
-                    <span id="toggle-icon">👁️</span>
-                </button>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">ZenoPay API Key</label>
+                            <div class="relative">
+                                <input type="password" name="zenopay_api_key" id="zenopay_api_key" 
+                                       value="{{ $zenoPayApiKey }}" required
+                                       class="w-full px-4 py-2.5 rounded-xl text-sm text-white placeholder-white/30 pr-12">
+                                <button type="button" onclick="toggleVisibility('zenopay_api_key', 'zenoEye')" 
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-lg opacity-50 hover:opacity-100 transition-opacity">
+                                    <span id="zenoEye">👁️</span>
+                                </button>
+                            </div>
+                            @error('zenopay_api_key')
+                                <p class="text-xs text-red-400 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-3 rounded-lg" style="background: rgba(255,123,84,0.05); border: 1px solid rgba(255,123,84,0.1);">
+                        <p class="text-xs text-[var(--text-muted)]">
+                            💡 Payment polling checks every 30 seconds automatically until payment is completed or fails.
+                        </p>
+                    </div>
+                </div>
             </div>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                Enter the super token for WhatsApp bot API authentication. This token will be used in the Authorization header: <code class="bg-blue-100 dark:bg-blue-800 px-2 py-1 rounded">Bearer YOUR_TOKEN</code>
-            </p>
-            @error('bot_super_token')
-                <p class="text-red-600 dark:text-red-400 text-sm mt-1">{{ $message }}</p>
-            @enderror
+
+            {{-- WhatsApp & Bot --}}
+            <div class="card p-6 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 opacity-10" style="background: radial-gradient(circle, #25D366 0%, transparent 70%);"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: linear-gradient(135deg, rgba(37,211,102,0.15), rgba(37,211,102,0.05)); border: 1px solid rgba(37,211,102,0.3);">
+                            <svg class="w-5 h-5 text-[#25D366]" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-white">📱 WhatsApp Bot</h3>
+                            <p class="text-xs text-[var(--text-secondary)]">Bot configuration & support number</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">WhatsApp Support Number</label>
+                            <input type="text" name="whatsapp_number" value="{{ $whatsappNumber }}"
+                                   placeholder="+255 7XX XXX XXX"
+                                   class="w-full px-4 py-2.5 rounded-xl text-sm text-white placeholder-white/30">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">Bot API Token</label>
+                            <div class="flex items-center gap-2">
+                                <div class="relative flex-1">
+                                    <input type="password" name="bot_super_token" id="bot_super_token" 
+                                           value="{{ $botSuperToken }}"
+                                           class="w-full px-4 py-2.5 rounded-xl text-sm text-white font-mono placeholder-white/30 pr-12">
+                                    <button type="button" onclick="toggleVisibility('bot_super_token', 'botEye')" 
+                                            class="absolute right-3 top-1/2 -translate-y-1/2 text-lg opacity-50 hover:opacity-100 transition-opacity">
+                                        <span id="botEye">👁️</span>
+                                    </button>
+                                </div>
+                                <button type="button" onclick="generateBotToken()"
+                                        class="px-3 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105"
+                                        style="background: linear-gradient(135deg, rgba(37,211,102,0.2), rgba(37,211,102,0.1)); border: 1px solid rgba(37,211,102,0.3); color: #25D366;">
+                                    🔄 Generate
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-4 mb-6">
-            <h3 class="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">API Information</h3>
-            <ul class="list-disc list-inside space-y-1 text-sm text-blue-800 dark:text-blue-200">
-                <li>Endpoint: <code class="bg-blue-100 dark:bg-blue-800 px-2 py-1 rounded">https://zenoapi.com/api/payments/mobile_money_tanzania</code></li>
-                <li>Status Check: <code class="bg-blue-100 dark:bg-blue-800 px-2 py-1 rounded">https://zenoapi.com/api/payments/order-status</code></li>
-                <li>Phone Format: <code class="bg-blue-100 dark:bg-blue-800 px-2 py-1 rounded">07XXXXXXXX</code></li>
-            </ul>
-        </div>
-
-        <div class="flex justify-end space-x-4">
-            <a href="{{ route('admin.dashboard') }}" class="px-6 py-2 border border-slate-300 dark:border-slate-600 rounded-md text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium">
-                Cancel
-            </a>
-            <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium">
-                Save Settings
+        {{-- Save Button --}}
+        <div class="mt-6 flex justify-end">
+            <button type="submit" class="btn-primary px-8 py-3 rounded-xl text-sm font-bold text-white transition-all duration-300">
+                💾 Save Settings
             </button>
         </div>
     </form>
-</div>
 
-<div class="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6 mt-6">
-    <h2 class="text-2xl font-semibold text-blue-800 dark:text-blue-200 mb-4">Payment Status Checking</h2>
-    <div class="bg-slate-50 dark:bg-slate-700 rounded-md p-4">
-        <p class="text-slate-600 dark:text-slate-400">
-            <strong>Note:</strong> The system uses polling to check payment status. After a payment is initiated, 
-            the system automatically checks the status every 30 seconds until the payment is completed or fails.
-        </p>
-    </div>
 </div>
 
 <script>
-    /**
-     * Generate a secure random token for the bot
-     */
-    function generateBotToken() {
-        // Generate a secure random token (64 characters)
-        const array = new Uint8Array(32);
-        window.crypto.getRandomValues(array);
-        const token = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-        
-        // Set the token in the input field
-        const tokenInput = document.getElementById('bot_super_token');
-        tokenInput.value = token;
-        
-        // Change input type to text temporarily to show the token
-        tokenInput.type = 'text';
-        
-        // Update toggle button state
-        const toggleIcon = document.getElementById('toggle-icon');
-        toggleIcon.textContent = '🙈';
-        
-        // Visual feedback
-        const generateBtn = document.getElementById('generate-token-btn');
-        const originalText = generateBtn.textContent;
-        generateBtn.textContent = '✓ Generated!';
-        generateBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
-        generateBtn.classList.add('bg-green-500');
-        
+function toggleVisibility(inputId, eyeId) {
+    const input = document.getElementById(inputId);
+    const eye = document.getElementById(eyeId);
+    if (input.type === 'password') {
+        input.type = 'text';
+        eye.textContent = '🙈';
+    } else {
+        input.type = 'password';
+        eye.textContent = '👁️';
+    }
+}
+
+function generateBotToken() {
+    const array = new Uint8Array(32);
+    window.crypto.getRandomValues(array);
+    const token = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+    const input = document.getElementById('bot_super_token');
+    input.value = token;
+    input.type = 'text';
+    document.getElementById('botEye').textContent = '🙈';
+}
+
+function copyOpsLink() {
+    const input = document.getElementById('opsUrl');
+    navigator.clipboard.writeText(input.value).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = '✅ Copied!';
+        btn.style.background = 'linear-gradient(135deg, #10b981, #06b6d4)';
         setTimeout(() => {
-            generateBtn.textContent = originalText;
-            generateBtn.classList.remove('bg-green-500');
-            generateBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+            btn.textContent = '📋 Copy';
+            btn.style.background = 'linear-gradient(135deg, #00ffc8, #00d9f5)';
         }, 2000);
-    }
-    
-    /**
-     * Toggle token visibility (show/hide)
-     */
-    function toggleTokenVisibility() {
-        const tokenInput = document.getElementById('bot_super_token');
-        const toggleIcon = document.getElementById('toggle-icon');
-        
-        if (tokenInput.type === 'password') {
-            tokenInput.type = 'text';
-            toggleIcon.textContent = '🙈';
-        } else {
-            tokenInput.type = 'password';
-            toggleIcon.textContent = '👁️';
-        }
-    }
+    });
+}
 </script>
 @endsection
