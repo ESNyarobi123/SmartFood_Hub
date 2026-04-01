@@ -255,7 +255,7 @@
                     
                     // Add bot response
                     setTimeout(() => {
-                        addMessage(data.message, 'bot');
+                        addMessage(data.message, 'bot', true);
                         userInput.focus();
                     }, 300);
                 }
@@ -308,7 +308,7 @@
                 addMessage('✓ Ruka (Sijajibu)', 'user');
                 
                 setTimeout(() => {
-                    addMessage(data.message, 'bot');
+                    addMessage(data.message, 'bot', true);
                     userInput.focus();
                 }, 300);
             }
