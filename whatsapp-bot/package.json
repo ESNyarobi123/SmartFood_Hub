@@ -9,9 +9,10 @@
     "dev": "node --watch src/index.js"
   },
   "dependencies": {
-    "baileys": "^6.7.16",
-    "pino": "^9.6.0",
     "axios": "^1.7.0",
+    "baileys": "^6.7.16",
+    "dotenv": "^17.3.1",
+    "pino": "^9.6.0",
     "qrcode-terminal": "^0.12.0"
   }
 }
