@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\Food\ProductController;
 use App\Http\Controllers\Admin\Food\RevenueController as FoodRevenueController;
 use App\Http\Controllers\Admin\Food\SubscriptionController as FoodSubscriptionController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\SiteCommentController as AdminSiteCommentController;
 use App\Http\Controllers\ConfirmationController;
 use App\Http\Controllers\Cyber\OrderController as CyberCustomerOrderController;
 use App\Http\Controllers\DailyOpsController;
@@ -22,12 +23,14 @@ use App\Http\Controllers\Food\PackageController as FoodCustomerPackageController
 use App\Http\Controllers\Food\SubscriptionController as FoodCustomerSubscriptionController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PublicCommentController;
 use Illuminate\Support\Facades\Route;
 
 // ================================================
 // PUBLIC ROUTES
 // ================================================
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::post('/comments', [PublicCommentController::class, 'store'])->name('comments.store');
 
 // Daily Operations — public shareable link (token-based)
 Route::get('/ops/{token}', [DailyOpsController::class, 'show'])->name('ops.daily');
@@ -186,4 +189,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', \App\Http\Middleware
     Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
     Route::post('/settings/ops-link', [SettingsController::class, 'generateOpsLink'])->name('settings.generate-ops-link');
     Route::delete('/settings/ops-link', [SettingsController::class, 'revokeOpsLink'])->name('settings.revoke-ops-link');
+
+    // Site Comments (Testimonials)
+    Route::get('/comments', [AdminSiteCommentController::class, 'index'])->name('comments.index');
+    Route::get('/comments/create', [AdminSiteCommentController::class, 'create'])->name('comments.create');
+    Route::post('/comments', [AdminSiteCommentController::class, 'store'])->name('comments.store');
+    Route::patch('/comments/{siteComment}/approve', [AdminSiteCommentController::class, 'approve'])->name('comments.approve');
+    Route::patch('/comments/{siteComment}/unapprove', [AdminSiteCommentController::class, 'unapprove'])->name('comments.unapprove');
+    Route::delete('/comments/{siteComment}', [AdminSiteCommentController::class, 'destroy'])->name('comments.destroy');
 });

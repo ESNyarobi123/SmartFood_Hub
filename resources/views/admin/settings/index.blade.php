@@ -155,6 +155,15 @@
                                    class="w-full px-4 py-2.5 rounded-xl text-sm text-white placeholder-white/30">
                         </div>
                         <div>
+                            <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">Footer Email (Public Site)</label>
+                            <input type="email" name="footer_email" value="{{ $footerEmail }}"
+                                   placeholder="info@domain.com"
+                                   class="w-full px-4 py-2.5 rounded-xl text-sm text-white placeholder-white/30">
+                            @error('footer_email')
+                                <p class="text-xs text-red-400 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
                             <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">Bot API Token</label>
                             <div class="flex items-center gap-2">
                                 <div class="relative flex-1">

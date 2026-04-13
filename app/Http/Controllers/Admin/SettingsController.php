@@ -15,14 +15,15 @@ class SettingsController extends Controller
         $whatsappNumber = Setting::get('whatsapp_number', '');
         $botSuperToken = Setting::get('bot_super_token', '');
         $dailyOpsToken = Setting::get('daily_ops_token', '');
+        $footerEmail = Setting::get('footer_email', '');
 
         $dailyOpsUrl = $dailyOpsToken
-            ? url('/ops/' . $dailyOpsToken)
+            ? url('/ops/'.$dailyOpsToken)
             : null;
 
         return view('admin.settings.index', compact(
             'zenoPayApiKey', 'whatsappNumber', 'botSuperToken',
-            'dailyOpsToken', 'dailyOpsUrl'
+            'dailyOpsToken', 'dailyOpsUrl', 'footerEmail'
         ));
     }
 
@@ -32,11 +33,13 @@ class SettingsController extends Controller
             'zenopay_api_key' => 'required|string|max:255',
             'whatsapp_number' => 'nullable|string|max:20',
             'bot_super_token' => 'nullable|string|max:255',
+            'footer_email' => 'nullable|email|max:255',
         ]);
 
         Setting::set('zenopay_api_key', $validated['zenopay_api_key'], 'ZenoPay API Key for mobile money payments');
         Setting::set('whatsapp_number', $validated['whatsapp_number'] ?? '', 'WhatsApp number for customer support');
         Setting::set('bot_super_token', $validated['bot_super_token'] ?? '', 'Bot Super Token for WhatsApp bot API authentication');
+        Setting::set('footer_email', $validated['footer_email'] ?? '', 'Footer email shown on public site');
 
         return redirect()->route('admin.settings.index')
             ->with('success', 'Settings updated successfully!');

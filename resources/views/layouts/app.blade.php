@@ -258,7 +258,11 @@
 
                 <div>
                     <h4 class="text-sm font-bold {{ request()->routeIs('home') ? 'text-gray-900' : 'text-white' }} mb-4">Contact</h4>
-                    @php $waNumber = \App\Models\Setting::get('whatsapp_number', ''); $waLink = $waNumber ? 'https://wa.me/' . preg_replace('/[^0-9]/', '', $waNumber) : '#'; @endphp
+                    @php
+                        $waNumber = \App\Models\Setting::get('whatsapp_number', '');
+                        $waLink = $waNumber ? 'https://wa.me/' . preg_replace('/[^0-9]/', '', $waNumber) : '#';
+                        $footerEmail = \App\Models\Setting::get('footer_email', 'info@monana.com');
+                    @endphp
                     <ul class="space-y-2">
                         <li class="text-sm {{ request()->routeIs('home') ? 'text-gray-600' : 'text-[#9ca3af]' }}">
                             @if($waNumber)
@@ -270,10 +274,89 @@
                                 WhatsApp: —
                             @endif
                         </li>
-                        <li class="text-sm {{ request()->routeIs('home') ? 'text-gray-600' : 'text-[#9ca3af]' }}">Email: info@monana.com</li>
+                        <li class="text-sm {{ request()->routeIs('home') ? 'text-gray-600' : 'text-[#9ca3af]' }}">
+                            @if($footerEmail)
+                                <a href="mailto:{{ $footerEmail }}" class="hover:underline">
+                                    Email: {{ $footerEmail }}
+                                </a>
+                            @else
+                                Email: —
+                            @endif
+                        </li>
                     </ul>
                 </div>
             </div>
+
+            @if(request()->routeIs('home'))
+                @php
+                    $approvedComments = \App\Models\SiteComment::query()
+                        ->approved()
+                        ->orderByDesc('approved_at')
+                        ->orderByDesc('id')
+                        ->limit(3)
+                        ->get();
+                @endphp
+                <div class="mt-10 pt-8 border-t border-gray-200">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="text-base font-bold text-gray-900 mb-4">Customer Comments</h4>
+                            @if($approvedComments->isEmpty())
+                                <p class="text-sm text-gray-600">Hakuna comments zilizo-approve bado.</p>
+                            @else
+                                <div class="space-y-3">
+                                    @foreach($approvedComments as $comment)
+                                        <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                                            <div class="flex items-center justify-between gap-3">
+                                                <p class="text-sm font-semibold text-gray-900">{{ $comment->name }}</p>
+                                                <p class="text-xs text-gray-500">{{ optional($comment->approved_at)->format('M d, Y') }}</p>
+                                            </div>
+                                            <p class="mt-2 text-sm text-gray-700 leading-relaxed">{{ $comment->message }}</p>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+
+                        <div>
+                            <h4 class="text-base font-bold text-gray-900 mb-4">Leave a Comment</h4>
+                            <form method="POST" action="{{ route('comments.store') }}" class="space-y-3">
+                                @csrf
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <input type="text" name="name" value="{{ old('name') }}" required
+                                               placeholder="Jina lako"
+                                               class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                        @error('name')
+                                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <div>
+                                        <input type="email" name="email" value="{{ old('email') }}"
+                                               placeholder="Email (optional)"
+                                               class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                        @error('email')
+                                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div>
+                                    <textarea name="message" rows="4" required
+                                              placeholder="Andika comment yako..."
+                                              class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-indigo-500 focus:ring-indigo-500">{{ old('message') }}</textarea>
+                                    @error('message')
+                                        <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <button type="submit"
+                                        class="inline-flex items-center justify-center rounded-xl bg-gray-900 px-5 py-3 text-sm font-bold text-white hover:bg-gray-800 transition-colors">
+                                    Tuma Comment
+                                </button>
+                                <p class="text-xs text-gray-500">Comment itaonekana baada ya admin ku-approve.</p>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
             <div class="mt-8 pt-8 {{ request()->routeIs('home') ? 'border-t border-gray-200' : 'border-t border-[#222]' }} text-center">
                 <p class="text-sm {{ request()->routeIs('home') ? 'text-gray-600' : 'text-[#9ca3af]' }}">&copy; {{ date('Y') }} Monana Platform. All rights reserved.</p>

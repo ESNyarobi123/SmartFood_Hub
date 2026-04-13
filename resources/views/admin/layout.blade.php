@@ -681,6 +681,18 @@
                         </svg>
                     </a>
                     <div class="flex-1"></div>
+                    @php $pendingCommentsIcon = \App\Models\SiteComment::pending()->count(); @endphp
+                    <a href="{{ route('admin.comments.index') }}" class="w-12 h-12 rounded-xl flex items-center justify-center hover:bg-white/10 transition-colors relative" title="Comments">
+                        <svg class="w-6 h-6 text-[#a8b2c1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h6m-6 8l-4-4V4a2 2 0 012-2h14a2 2 0 012 2v12a2 2 0 01-2 2H7z"></path>
+                        </svg>
+                        @if($pendingCommentsIcon > 0)
+                            <span class="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+                                  style="background: linear-gradient(135deg, #ff7b54, #fee140); color: #0a0a0f;">
+                                {{ min($pendingCommentsIcon, 9) }}{{ $pendingCommentsIcon > 9 ? '+' : '' }}
+                            </span>
+                        @endif
+                    </a>
                     <a href="{{ route('admin.settings.index') }}" class="w-12 h-12 rounded-xl flex items-center justify-center hover:bg-white/10 transition-colors" title="Settings">
                         <svg class="w-6 h-6 text-[#a8b2c1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
@@ -848,6 +860,17 @@
 
                 <!-- Settings (Always visible) -->
                 <div class="px-4 mt-6 pt-4 border-t border-white/5">
+                    @php $pendingComments = \App\Models\SiteComment::pending()->count(); @endphp
+                    <a href="{{ route('admin.comments.index') }}"
+                       class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl {{ request()->routeIs('admin.comments.*') ? 'active' : '' }}">
+                        <svg class="w-5 h-5 text-[#a8b2c1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h6m-6 8l-4-4V4a2 2 0 012-2h14a2 2 0 012 2v12a2 2 0 01-2 2H7z"></path>
+                        </svg>
+                        <span class="text-sm font-medium text-[#e0e8f0]">Comments</span>
+                        @if($pendingComments > 0)
+                            <span class="badge food ml-auto px-2.5 py-1 text-[10px] font-bold rounded-full">{{ $pendingComments }}</span>
+                        @endif
+                    </a>
                     <a href="{{ route('admin.settings.index') }}" 
                        class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-xl {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
                         <svg class="w-5 h-5 text-[#a8b2c1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
